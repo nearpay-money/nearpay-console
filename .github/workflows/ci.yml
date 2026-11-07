@@ -1,0 +1,47 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # @nearpay/* come from a registry: the local Verdaccio in development, GitHub Packages once remotes
+      # exist (repository variable NP_REGISTRY_URL + secret NP_REGISTRY_TOKEN).
+      - name: Point the NearPay scopes at the CI registry
+        if: ${{ vars.NP_REGISTRY_URL != '' }}
+        env:
+          NP_REGISTRY_URL: ${{ vars.NP_REGISTRY_URL }}
+          NP_REGISTRY_TOKEN: ${{ secrets.NP_REGISTRY_TOKEN }}
+        run: |
+          host="${NP_REGISTRY_URL#http:}"
+          host="${host#https:}"
+          {
+            echo "@nearpay:registry=${NP_REGISTRY_URL}"
+            echo "@nearpay-internal:registry=${NP_REGISTRY_URL}"
+            echo "${host}:_authToken=${NP_REGISTRY_TOKEN}"
+          } > .npmrc
+      - run: pnpm install --frozen-lockfile
+      # typecheck, lint, coverage-gated unit tests, vite build (dist/), mock-backed Playwright on Chrome
+      - run: pnpm verify
+        env:
+          NP_CHROME_PATH: /usr/bin/google-chrome
+      - uses: actions/upload-artifact@v4
+        with:
+          name: console-dist
+          path: dist
+  image:
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # builds the nginx image from the same sources (push/deploy wiring is nearpay-deploy's job)
+      - run: docker build --build-arg NP_REGISTRY_URL=${{ vars.NP_REGISTRY_URL || 'http://127.0.0.1:4873' }} -t nearpay/console:ci .
