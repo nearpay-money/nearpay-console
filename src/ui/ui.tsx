@@ -146,6 +146,8 @@ export interface ActionDialogProps {
   noteHint?: ReactNode;
   noteRequired?: boolean;
   noteMax?: number;
+  /** Minimum length of the (trimmed) note; implies a required note. */
+  noteMin?: number;
   confirmLabel: string;
   confirmVariant?: "primary" | "danger";
   /** Extra fields above the note. */
@@ -168,6 +170,7 @@ export function ActionDialog({
   noteHint,
   noteRequired = true,
   noteMax = 500,
+  noteMin,
   confirmLabel,
   confirmVariant = "primary",
   children,
@@ -190,8 +193,12 @@ export function ActionDialog({
   }, [open]);
   const submit = async () => {
     const trimmed = note.trim();
-    if (noteLabel && noteRequired && !trimmed) {
+    if (noteLabel && (noteRequired || noteMin) && !trimmed) {
       setInvalid(`Add a ${noteLabel.toLowerCase()}. It is recorded in the audit log.`);
+      return;
+    }
+    if (noteLabel && noteMin && trimmed.length < noteMin) {
+      setInvalid(`Write at least ${noteMin} characters. It is recorded in the audit log.`);
       return;
     }
     const v = validate?.() ?? null;

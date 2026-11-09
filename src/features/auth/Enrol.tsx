@@ -15,7 +15,7 @@ import { AuthLayout } from "./AuthLayout";
 type State =
   | { step: "verifying" }
   | { step: "invalid"; error?: unknown }
-  | { step: "ready"; email: string; registrationToken: string; expiresAt: number };
+  | { step: "ready"; email: string; registrationToken: string; expiresAt: number; platform: boolean };
 
 export function Enrol() {
   const app = useApp();
@@ -37,7 +37,14 @@ export function Enrol() {
     }
     verifyEnrolment(app.api, token).then(
       (r) =>
-        setState({ step: "ready", email: r.email, registrationToken: r.registration_token, expiresAt: r.expires_at }),
+        setState({
+          step: "ready",
+          email: r.email,
+          registrationToken: r.registration_token,
+          expiresAt: r.expires_at,
+          // beta (NP_OPS_ALLOW_PLATFORM_PASSKEYS): identity also accepts Touch ID / phone passkeys
+          platform: (r as { platform_passkeys_allowed?: unknown }).platform_passkeys_allowed === true,
+        }),
       (e: unknown) => setState({ step: "invalid", error: e }),
     );
   }, [app.api]);
@@ -82,9 +89,17 @@ export function Enrol() {
         </>
       }
     >
-      <Callout tone="info" title="Hardware keys only">
-        The console accepts security keys on NearPay’s allow-list. Phone, laptop and synced passkeys are refused.
-      </Callout>
+      {state.platform ? (
+        <Callout tone="warning" title="Beta: platform passkeys accepted">
+          During the closed beta the console also accepts this device’s passkey (Touch ID, iCloud Keychain, Google
+          Password Manager). You confirm with your fingerprint, face or device PIN. Your operator record shows it as
+          “platform passkey — beta”.
+        </Callout>
+      ) : (
+        <Callout tone="info" title="Hardware keys only">
+          The console accepts security keys on NearPay’s allow-list. Phone, laptop and synced passkeys are refused.
+        </Callout>
+      )}
       <form
         className="np-stack"
         onSubmit={async (e) => {
@@ -110,10 +125,10 @@ export function Enrol() {
           type="submit"
           fullWidth
           loading={busy}
-          loadingText="Touch your security key…"
+          loadingText={state.platform ? "Confirm on your device…" : "Touch your security key…"}
           leadingIcon={<ShieldCheckIcon size={20} />}
         >
-          Register security key
+          {state.platform ? "Register passkey" : "Register security key"}
         </Button>
         <ActionError error={error} />
       </form>
