@@ -69,3 +69,31 @@ export function tokenFromHash(hash: string): string | null {
   const t = new URLSearchParams(hash.replace(/^#/, "")).get("token");
   return t && t.length >= 16 && t.length <= 256 ? t : null;
 }
+
+/**
+ * Extensions of `OpsSession` sent by identity (open object, not yet in the spec): the console auth mode
+ * (`passkey` default, or `cloudflare_access` — Google login through Cloudflare Access) and, in passkey
+ * mode, how the operator's passkey was admitted (`platform_beta`: NP_OPS_ALLOW_PLATFORM_PASSKEYS, beta only).
+ */
+interface SessionExtensions {
+  auth_mode?: "passkey" | "cloudflare_access";
+  reauth_url?: string;
+  passkey?: { policy?: string; label?: string };
+}
+
+const ext = (s: OpsSession | null | undefined): SessionExtensions => (s ?? {}) as SessionExtensions;
+
+/** The console signs in through Cloudflare Access (re-authentication = sign in again with Google). */
+export const usesAccess = (s: OpsSession | null | undefined): boolean => ext(s).auth_mode === "cloudflare_access";
+
+/** Where to send an operator to sign in again through Cloudflare Access (same origin only). */
+export function reauthUrl(s: OpsSession | null | undefined): string {
+  const u = ext(s).reauth_url;
+  return u?.startsWith("/") && !u.startsWith("//") ? u : "/cdn-cgi/access/logout";
+}
+
+/** "platform passkey — beta" when the operator signed up with a platform passkey (beta flag). */
+export function passkeyBadge(s: OpsSession | null | undefined): string | null {
+  const p = ext(s).passkey;
+  return p?.policy === "platform_beta" ? (p.label ?? "platform passkey — beta") : null;
+}

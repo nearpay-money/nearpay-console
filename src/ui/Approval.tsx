@@ -2,6 +2,11 @@
  * A two-person request (`OpsApproval`): suspension/reinstatement of a merchant or a kill-switch
  * release. The console shows who asked and lets an ops admin approve or reject; whether the
  * approver differs from the requester is decided by the server (`403 approver_conflict`).
+ *
+ * Adaptive rule: on a single-operator platform (one active ops admin when the request was made) the
+ * server adds `single_operator` to the request (an extension, not yet in the spec). The requester may
+ * then complete it alone after the wait, confirming again and writing a reason; the console says so
+ * and asks for the reason. Without the extension nothing changes.
  */
 
 import type { z } from "@nearpay/spec";
@@ -11,6 +16,7 @@ import { useId, useState } from "react";
 import { useApp } from "../app/context";
 import { approvalActionLabel, approvalStatusLabel, formatDateTime, formatUntil } from "../lib/format";
 import { ROLE_LABEL } from "../lib/permissions";
+import { canCompleteAlone, singleOperatorOf } from "../lib/two-person";
 import { ActionDialog, GateNote } from "./ui";
 
 export type OpsApproval = z.output<typeof OpsApprovalSchema>;
@@ -49,6 +55,9 @@ export function ApprovalCard({
   const [dialog, setDialog] = useState<"approve" | "reject" | null>(null);
   const gateId = useId();
   const pending = a.status === "pending";
+  const solo = singleOperatorOf(a);
+  const selfComplete = pending && mine && solo !== null;
+  const waiting = selfComplete && !canCompleteAlone(solo, Date.now() / 1000);
   return (
     <Card as="section" aria-labelledby={`${gateId}-t`} className="c-approval">
       <div className="np-stack">
@@ -75,17 +84,26 @@ export function ApprovalCard({
         />
         {pending ? (
           <>
-            <p className="c-two-person">
-              <strong>A different operator must approve.</strong>{" "}
-              {mine
-                ? "You requested this, so another ops admin has to approve it. You can withdraw it."
-                : "Nothing changes until an ops admin other than the requester approves."}
-            </p>
+            {selfComplete ? (
+              <p className="c-two-person">
+                <strong>You are the only operator.</strong>{" "}
+                {waiting && solo.available_at !== null
+                  ? `You can complete this yourself from ${formatDateTime(solo.available_at)} (${formatUntil(solo.available_at)}), after confirming again and writing a reason. It is recorded as a single-operator action and alerts the team.`
+                  : "You can complete this yourself now: confirm again and write a reason. It is recorded as a single-operator action and alerts the team."}
+              </p>
+            ) : (
+              <p className="c-two-person">
+                <strong>A different operator must approve.</strong>{" "}
+                {mine
+                  ? "You requested this, so another ops admin has to approve it. You can withdraw it."
+                  : "Nothing changes until an ops admin other than the requester approves."}
+              </p>
+            )}
             <div className="np-row">
               <Button
                 variant={destructive ? "danger" : "primary"}
                 onClick={() => setDialog("approve")}
-                disabled={Boolean(approveBlocked)}
+                disabled={Boolean(approveBlocked) || waiting}
                 aria-describedby={approveBlocked ? `${gateId}-a` : undefined}
               >
                 {approveLabel}
@@ -112,9 +130,14 @@ export function ApprovalCard({
         open={dialog === "approve"}
         onClose={() => setDialog(null)}
         title={approveLabel}
-        description={`Approving executes “${approvalActionLabel(a.action).toLowerCase()}” now. A different operator must approve: the requester cannot.`}
-        noteLabel="Approver’s note"
-        noteRequired={false}
+        description={
+          selfComplete
+            ? `Completing executes “${approvalActionLabel(a.action).toLowerCase()}” now, as the only operator. You will confirm again; your reason is recorded in the audit log.`
+            : `Approving executes “${approvalActionLabel(a.action).toLowerCase()}” now. A different operator must approve: the requester cannot.`
+        }
+        noteLabel={selfComplete ? "Reason" : "Approver’s note"}
+        noteRequired={selfComplete}
+        {...(selfComplete ? { noteMin: solo.reason_min_length } : {})}
         confirmLabel={approveLabel}
         confirmVariant={destructive ? "danger" : "primary"}
         stepUp

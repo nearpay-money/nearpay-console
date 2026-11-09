@@ -56,6 +56,54 @@ test.describe("overview and merchants", () => {
     await expect(page.getByRole("button", { name: "Request reinstatement" })).toBeVisible();
   });
 
+  test("single-operator platform: the only admin completes their own request with a written reason", async ({
+    page,
+    api,
+  }) => {
+    api.singleOperator = true;
+    await signIn(page, "/merchants");
+    await page.getByRole("link", { name: /Orbit Tools/ }).click();
+    await page.getByRole("button", { name: "Request suspension" }).click();
+    const dlg = page.getByRole("dialog", { name: /Request suspending Orbit Tools/ });
+    await dlg.getByLabel(/Reason/).fill("Chargeback pattern reported by partner");
+    await dlg.getByRole("button", { name: "Request suspension" }).click();
+    await expect(page.getByText("You are the only operator.")).toBeVisible();
+    await expect(page.getByText("A different operator must approve.")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Approve and suspend" }).first().click();
+    const approve = page.getByRole("dialog", { name: "Approve and suspend" });
+    await approve.getByLabel(/Reason/).fill("too short");
+    await approve.getByRole("button", { name: "Approve and suspend" }).click();
+    await expect(approve.getByText(/Write at least 20 characters/)).toBeVisible();
+    expect(api.callsTo("approveOpsSuspensionRequest")).toHaveLength(0);
+    await approve.getByLabel(/Reason/).fill("Only operator: partner evidence reviewed and confirmed");
+    await approve.getByRole("button", { name: "Approve and suspend" }).click();
+    await expect(page.getByRole("heading", { name: "Orbit Tools" }).locator("..").getByText("Suspended")).toBeVisible();
+    expect(api.callsTo("approveOpsSuspensionRequest").at(-1)?.body).toMatchObject({
+      note: "Only operator: partner evidence reviewed and confirmed",
+    });
+  });
+
+  test("Cloudflare Access mode: a sensitive action asks to sign in again instead of a security key", async ({
+    page,
+    api,
+  }) => {
+    api.accessMode = true;
+    await signIn(page, "/merchants");
+    await page.getByRole("link", { name: /Orbit Tools/ }).click();
+    api.stepUpUntil = 0;
+    await page.getByRole("button", { name: "Request suspension" }).click();
+    const dlg = page.getByRole("dialog", { name: /Request suspending Orbit Tools/ });
+    await dlg.getByLabel(/Reason/).fill("Chargeback pattern reported by partner");
+    await dlg.getByRole("button", { name: "Request suspension" }).click();
+    const reauth = page.getByRole("dialog", { name: "Sign in again to confirm" });
+    await expect(reauth).toBeVisible();
+    await expect(reauth.getByRole("button", { name: "Sign in again" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm with security key" })).toHaveCount(0);
+    await reauth.getByRole("button", { name: "Cancel" }).click();
+    await expect(reauth).toHaveCount(0);
+  });
+
   test("an ops operator can request but not approve", async ({ page, api }) => {
     api.role = "ops";
     const s = api.suspensions.get(api.orbit.id);

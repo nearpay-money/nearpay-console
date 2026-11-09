@@ -89,6 +89,10 @@ export class MockApi {
   operator: { id: `usr_${string}`; email: string } = OP_ME;
   csrf = b64u(32);
   stepUpUntil = 0;
+  /** Adaptive two-person rule: the platform has one active ops admin (requests carry `single_operator`). */
+  singleOperator = false;
+  /** Console signs in through Cloudflare Access (session extensions `auth_mode`, `reauth_url`). */
+  accessMode = false;
   /** Absolute session lifetime handed out at sign-in (seconds). */
   sessionTtl = 12 * 3600;
   idleTtl = 1800;
@@ -333,6 +337,7 @@ export class MockApi {
     }
     const n = nowS();
     return {
+      ...(this.accessMode ? { auth_mode: "cloudflare_access", reauth_url: "/cdn-cgi/access/logout" } : {}),
       object: "ops_session",
       operator: this.operator,
       role: this.role,
@@ -376,6 +381,7 @@ export class MockApi {
       decided_at: null,
       decision_note: null,
       expires_at: nowS() + ttl,
+      ...(this.singleOperator ? { single_operator: { used: false, available_at: nowS(), reason_min_length: 20 } } : {}),
     };
   }
 
@@ -477,7 +483,10 @@ export class MockApi {
         const s = this.suspensions.get(id);
         const a = s?.pending_request;
         if (!s || !a || a.id !== params.request) return err(409, "state_conflict", "state_conflict");
-        if (a.requested_by.id === this.operator.id)
+        const solo = (a as { single_operator?: unknown }).single_operator !== undefined;
+        if (solo && a.requested_by.id === this.operator.id && String(b.note ?? "").trim().length < 20)
+          return err(400, "invalid_request_error", "parameter_invalid", "A written reason is required.");
+        if (a.requested_by.id === this.operator.id && !solo)
           return err(
             403,
             "permission_error",

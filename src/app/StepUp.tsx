@@ -8,11 +8,12 @@ import { Button, Modal, ShieldCheckIcon } from "@nearpay-internal/ui";
 import { useState } from "react";
 import { StepUpCanceled } from "../lib/errors";
 import { stepUpWithSecurityKey, webAuthnBrowserError } from "../lib/passkeys";
+import { reauthUrl, usesAccess } from "../lib/session";
 import { ActionError } from "../ui/ui";
 import { useApp } from "./context";
 
 export function StepUpDialog() {
-  const { stepUp, api, setSession } = useApp();
+  const { stepUp, api, setSession, session } = useApp();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>();
   const cancel = () => {
@@ -20,6 +21,34 @@ export function StepUpDialog() {
     setError(undefined);
     stepUp?.reject(new StepUpCanceled());
   };
+  if (usesAccess(session))
+    // Cloudflare Access mode: re-authentication = signing in again with Google (fresh for 5 minutes)
+    return (
+      <Modal
+        open={Boolean(stepUp)}
+        onClose={cancel}
+        dismissible={false}
+        size="sm"
+        title="Sign in again to confirm"
+        description="This action is sensitive and recorded in the audit log. Sign in again with Google through Cloudflare Access, then repeat the action within 5 minutes."
+        footer={
+          <>
+            <Button variant="secondary" onClick={cancel}>
+              Cancel
+            </Button>
+            <Button
+              leadingIcon={<ShieldCheckIcon size={20} />}
+              onClick={() => {
+                stepUp?.reject(new StepUpCanceled());
+                window.location.assign(reauthUrl(session));
+              }}
+            >
+              Sign in again
+            </Button>
+          </>
+        }
+      />
+    );
   return (
     <Modal
       open={Boolean(stepUp)}

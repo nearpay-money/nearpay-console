@@ -7,6 +7,7 @@ import { AppShell, Breadcrumb, Button, Callout, type NavGroup } from "@nearpay-i
 import { type ReactNode, useEffect, useState } from "react";
 import { formatDateTime } from "../lib/format";
 import { ROLE_LABEL } from "../lib/permissions";
+import { passkeyBadge } from "../lib/session";
 import { Link, useApp } from "./context";
 
 export type Section =
@@ -116,7 +117,15 @@ export function Shell({
       navLabel="Operations"
       nav={[group("Operations", OPERATIONS), group("Risk controls", RISK)]}
       footerLinks={[{ label: "Help & support", href: "https://docs.nearpay.money/operations" }]}
-      user={session ? { name: operatorName(session.operator.email), role: ROLE_LABEL[session.role] } : undefined}
+      user={
+        session
+          ? {
+              name: operatorName(session.operator.email),
+              // beta: an operator who registered a platform passkey (NP_OPS_ALLOW_PLATFORM_PASSKEYS)
+              role: [ROLE_LABEL[session.role], passkeyBadge(session)].filter(Boolean).join(" · "),
+            }
+          : undefined
+      }
       breadcrumb={<Breadcrumb items={items} />}
       mode={app.mode}
       notifications={{

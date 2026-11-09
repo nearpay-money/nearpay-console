@@ -10,7 +10,15 @@ import { ApiClient } from "../lib/api";
 import { StepUpCanceled } from "../lib/errors";
 import { blockedReason, opsAllows } from "../lib/permissions";
 import { hrefFor, type Mode, modeFromSearch } from "../lib/router";
-import { type ExpiryPhase, expiryPhase, type OpsSession, restoreSession, sessionEndsAt } from "../lib/session";
+import {
+  type ExpiryPhase,
+  expiryPhase,
+  type OpsSession,
+  reauthUrl,
+  restoreSession,
+  sessionEndsAt,
+  usesAccess,
+} from "../lib/session";
 
 export const API_BASE = "/api";
 
@@ -219,12 +227,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       else endSession("expired");
     },
     signOut: async () => {
+      const access = usesAccess(sessionRef.current);
+      const reauth = reauthUrl(sessionRef.current);
       try {
         await api.call(opsLogout, { body: {} });
       } catch {
         // the session may already be gone; sign out locally anyway
       }
       endSession("signed_out");
+      // Cloudflare Access mode: the Google login ends at Cloudflare
+      if (access) window.location.assign(reauth);
     },
     signedOutReason,
     merchantName,
