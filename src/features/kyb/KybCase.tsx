@@ -191,9 +191,7 @@ export function KybCase({ id }: { id: string }) {
                   { label: "Business country and address", value: screening.detail },
                   {
                     label: "Payout addresses",
-                    value: (
-                      <Link to={`/merchants/${k.account_id}`}>Destinations and re-screening on the merchant page</Link>
-                    ),
+                    value: <Link to="/blocklist">Screen or re-screen this merchant’s destinations (Blocklist)</Link>,
                   },
                 ]}
               />
