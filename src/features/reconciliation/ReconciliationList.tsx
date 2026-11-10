@@ -43,7 +43,7 @@ export const RESULT_TONE = (r: ReconciliationRun) =>
     : r.status === "ok"
       ? "success"
       : r.status === "running"
-        ? "neutral"
+        ? "progress"
         : r.status === "error"
           ? "danger"
           : "warning";

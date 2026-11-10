@@ -202,8 +202,8 @@ function KillSwitch() {
                 ),
               },
               { key: "reason", header: "Reason", cell: (e) => e.reason },
-              { key: "actor", header: "By", hideOnNarrow: true, cell: (e) => e.actor },
-              { key: "at", header: "When", numeric: true, cell: (e) => formatDateTime(e.created_at) },
+              { key: "actor", muted: true, header: "By", hideOnNarrow: true, cell: (e) => e.actor },
+              { key: "at", muted: true, header: "When", numeric: true, cell: (e) => formatDateTime(e.created_at) },
             ]}
             rows={log.data?.data ?? []}
             rowKey={(e) => String(e.version)}
@@ -276,7 +276,7 @@ function Findings() {
   const columns: TableColumn<Finding>[] = [
     { key: "ref", header: "Finding", primary: true, cell: (f) => findingRef(f.id) },
     { key: "merchant", header: "Merchant", cell: (f) => app.merchantName(f.account_id) ?? "…" },
-    { key: "check", header: "Check", hideOnNarrow: true, cell: (f) => f.check_kind },
+    { key: "check", muted: true, header: "Check", hideOnNarrow: true, cell: (f) => f.check_kind },
     {
       key: "result",
       header: "Result",
@@ -292,7 +292,7 @@ function Findings() {
       hideOnNarrow: true,
       cell: (f) => (f.acknowledged_at ? formatDateTime(f.acknowledged_at) : "Open"),
     },
-    { key: "age", header: "Recorded", numeric: true, cell: (f) => formatAge(f.created, now) },
+    { key: "age", muted: true, header: "Recorded", numeric: true, cell: (f) => formatAge(f.created, now) },
   ];
   return (
     <div className="np-stack np-stack--lg">

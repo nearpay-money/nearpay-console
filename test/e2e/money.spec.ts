@@ -46,6 +46,23 @@ test.describe("holds, sentinel, reconciliation, audit", () => {
     await expect(page.getByText(/Escalated from review RV–/).first()).toBeVisible();
   });
 
+  test("execution: a failed finality re-check is flagged on the evidence trail, the state is unchanged", async ({
+    page,
+    api,
+  }) => {
+    await signIn(page, `/executions/${api.succeeded.id}`);
+    await expect(page.getByRole("heading", { name: /^Execution RV–/ })).toBeVisible();
+    const trail = page.getByRole("region", { name: "Evidence trail" });
+    await expect(trail.getByText("Finality re-check failed").first()).toBeVisible();
+    await expect(trail.getByText(/block hash changed at finality/)).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Evidence trail" }).getByText("Finality re-check failed"),
+    ).toBeVisible();
+    // display only: no write, the execution stays succeeded
+    expect(api.callsTo("reverifyOpsExecution")).toHaveLength(0);
+    await expect(page.getByText("Succeeded", { exact: true }).first()).toBeVisible();
+  });
+
   test("the explorer never mixes modes", async ({ page, api }) => {
     await signIn(page, "/holds");
     await page.getByRole("radio", { name: "Test" }).first().click();

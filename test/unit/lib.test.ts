@@ -6,7 +6,7 @@ import {
 } from "@nearpay-internal/spec";
 import { describe, expect, it, vi } from "vitest";
 import { assetDisplay, assetLabel, formatAssetAmount } from "../../src/lib/assets";
-import { canReverify, reviewChecks } from "../../src/lib/checks";
+import { canReverify, finalityRecheckOf, reviewChecks } from "../../src/lib/checks";
 import { ApiError } from "../../src/lib/errors";
 import * as fmt from "../../src/lib/format";
 import { blockedReason, opsAllows } from "../../src/lib/permissions";
@@ -258,5 +258,24 @@ describe("review checks", () => {
     expect(verified[1]?.result).toBe("Matches expected");
     expect(verified[2]?.result).toBe("Confirmed on chain");
     expect(reviewChecks({ ...base, evidence: { ...ev, tier: "B" } }, true)[2]?.result).toBe("Provider-attested");
+  });
+});
+
+describe("finality re-check flag (rails §8.12, ADR-0022)", () => {
+  it("reads the verifier observation payload and never invents a result", () => {
+    const fr = (payload: unknown) => finalityRecheckOf({ source: "verifier", payload });
+    expect(fr({ finality_recheck: { outcome: "failed", reason: "block hash changed at finality" } })).toEqual({
+      outcome: "failed",
+      label: "Finality re-check failed",
+      tone: "danger",
+      reason: "block hash changed at finality",
+    });
+    expect(fr({ finality_recheck: { outcome: "timeout" } })?.tone).toBe("warning");
+    expect(fr({ finality_recheck: { outcome: "finalized" } })?.label).toBe("Finality re-check passed");
+    expect(fr({ finality_recheck: { outcome: "later" } })?.outcome).toBe("other");
+    expect(fr({ status: "PROCESSING" })).toBeNull();
+    expect(fr({ finality_recheck: "failed" })).toBeNull();
+    expect(fr(null)).toBeNull();
+    expect(finalityRecheckOf({ source: "watcher" })).toBeNull();
   });
 });

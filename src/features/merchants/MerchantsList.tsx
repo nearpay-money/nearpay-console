@@ -85,9 +85,22 @@ export function MerchantsList() {
         </StatusBadge>
       ),
     },
-    { key: "live", header: "Live mode", hideOnNarrow: true, cell: (m) => (m.live_enabled ? "Enabled" : "Not enabled") },
-    { key: "country", header: "Country", hideOnNarrow: true, cell: (m) => m.country ?? "—" },
-    { key: "created", header: "Created", numeric: true, hideOnNarrow: true, cell: (m) => formatDate(m.created) },
+    {
+      key: "live",
+      muted: true,
+      header: "Live mode",
+      hideOnNarrow: true,
+      cell: (m) => (m.live_enabled ? "Enabled" : "Not enabled"),
+    },
+    { key: "country", muted: true, header: "Country", hideOnNarrow: true, cell: (m) => m.country ?? "—" },
+    {
+      key: "created",
+      muted: true,
+      header: "Created",
+      numeric: true,
+      hideOnNarrow: true,
+      cell: (m) => formatDate(m.created),
+    },
   ];
 
   const filtered = Boolean(query || status || kyb || live);
