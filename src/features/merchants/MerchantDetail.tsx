@@ -88,11 +88,9 @@ export function MerchantDetail({ id }: { id: string }) {
               </StatusBadge>
             }
             sub={
-              m.kyb_status === "approved" ? (
-                "Business details reviewed by NearPay"
-              ) : (
-                <Link to={`/kyb/${m.id}`}>Open the business review</Link>
-              )
+              <Link to={`/kyb/${m.id}`}>
+                {m.kyb_status === "approved" ? "Self-declared · open the business" : "Open the business"}
+              </Link>
             }
           />
           <Stat

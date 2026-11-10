@@ -134,7 +134,8 @@ describe("format", () => {
     expect(fmt.caseKindLabel("reconciliation_diff")).toBe("Settlement mismatch");
     expect(fmt.caseKindLabel("brand_new_kind")).toBe("Brand new kind");
     expect(fmt.caseKindLabel(null)).toBe("—");
-    expect(fmt.kybStatusLabel("approved")).toBe("Reviewed");
+    expect(fmt.kybStatusLabel("approved")).toBe("Active");
+    expect(fmt.kybStatusLabel("pending")).toBe("Submitted");
     expect(fmt.humanize("")).toBe("");
   });
 });

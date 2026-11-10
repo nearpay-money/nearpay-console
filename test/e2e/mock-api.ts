@@ -107,11 +107,13 @@ export class MockApi {
   suspensions = new Map<string, SuspensionT>(this.merchants.map((m) => [m.id, suspension(m.id)]));
   kyb: KybCaseT[] = [
     kybCase(this.northstar),
+    // open onboarding (ADR-0024): decided by the system, no register number declared
     kybCase(this.acme, {
       status: "approved",
       decided_at: NOW - 30 * 86_400,
-      decided_by: OP_OTHER.id,
-      decision_reason: "Register entry matches.",
+      decided_by: "system",
+      decision_reason: "auto-approved: open onboarding (ADR-0024)",
+      profile: { ...kybCase(this.acme).profile, registration_number: null },
     }),
   ];
   held = execution({ account_id: this.acme.id });
@@ -532,8 +534,8 @@ export class MockApi {
         const k = this.kyb.find((x) => x.account_id === id);
         if (!k) return err(404, "invalid_request_error", "resource_missing");
         const decision = b.decision as KybCaseT["status"];
-        if (decision === "approved" && k.status !== "pending")
-          return err(409, "state_conflict", "state_conflict", "Only pending cases may be approved.");
+        if (decision === "approved" && k.status !== "pending" && k.status !== "rejected")
+          return err(409, "state_conflict", "state_conflict", "Only pending or rejected cases may be approved.");
         k.status = decision;
         k.decision_reason = String(b.reason);
         k.decided_by = this.operator.id;

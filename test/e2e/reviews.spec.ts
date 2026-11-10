@@ -1,10 +1,47 @@
 import { confirmStepUp, expect, signIn, test } from "./harness";
 
 test.describe("KYB, cases, blocklist", () => {
-  test("business review: self-declared details, request more info, approve", async ({ page, api }) => {
+  test("businesses: auto-approved business, screening result, reject for abuse and reverse (ADR-0024)", async ({
+    page,
+    api,
+  }) => {
     await signIn(page, "/kyb");
+    await expect(page.getByRole("heading", { name: "Businesses" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Active" })).toBeChecked();
     await page.getByRole("link", { name: /^KY–/ }).click();
-    await expect(page.getByRole("heading", { name: /Business review KY–/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Business KY–/ })).toBeVisible();
+    await expect(page.getByText("Clear", { exact: true })).toBeVisible();
+    await expect(page.getByText("Not provided")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Approve/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Suspend or reinstate the merchant" })).toHaveAttribute(
+      "href",
+      `/merchants/${api.acme.id}`,
+    );
+    api.stepUpUntil = 0;
+    await page.getByRole("button", { name: "Reject for abuse" }).click();
+    const dlg = page.getByRole("dialog", { name: "Reject business for abuse" });
+    await dlg.getByLabel(/Internal reason/).fill("Chargeback fraud reports");
+    await dlg.getByRole("button", { name: "Reject business" }).click();
+    await confirmStepUp(page);
+    await expect(page.getByRole("button", { name: "Reverse rejection" })).toBeVisible();
+    expect(api.callsTo("decideOpsKybCase").at(-1)?.body).toEqual({
+      decision: "rejected",
+      reason: "Chargeback fraud reports",
+    });
+    await page.getByRole("button", { name: "Reverse rejection" }).click();
+    const rev = page.getByRole("dialog", { name: "Activate business" });
+    await rev.getByLabel(/Internal reason/).fill("Reports withdrawn");
+    await rev.getByRole("button", { name: "Activate" }).click();
+    await expect(page.getByRole("button", { name: "Reverse rejection" })).toHaveCount(0);
+    expect(api.callsTo("decideOpsKybCase").at(-1)?.body).toMatchObject({ decision: "approved" });
+  });
+
+  test("business in manual review mode: self-declared details, request more info", async ({ page, api }) => {
+    await signIn(page, "/kyb");
+    await page.getByRole("radio", { name: "Submitted" }).click();
+    await page.getByRole("link", { name: /^KY–/ }).click();
+    await expect(page.getByRole("heading", { name: /Business KY–/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Activate (manual review)" })).toBeVisible();
     await expect(page.getByText("Self-declared", { exact: true })).toBeVisible();
     await expect(page.getByText(/No documents were collected/)).toBeVisible();
     await expect(page.getByText(/verified identity/i)).toHaveCount(0);
@@ -25,7 +62,7 @@ test.describe("KYB, cases, blocklist", () => {
       reason: "Number has 7 digits",
       requested_info: "Upload-free: correct the registration number.",
     });
-    await expect(page.getByRole("button", { name: "Approve details" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Activate (manual review)" })).toHaveCount(0);
   });
 
   test("cases: assign, note, close", async ({ page, api }) => {

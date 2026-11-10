@@ -1,6 +1,6 @@
 /**
  * Operations overview (Figma b02/b03 "Operations overview"): payment reviews (Verifier holds),
- * business reviews awaiting a decision, reconciliation exceptions, and one queue of open cases.
+ * businesses pending (manual review mode only, ADR-0024), reconciliation exceptions, and one queue of open cases.
  */
 import { listOpsCases, listOpsExecutions, listOpsKybCases, listOpsReconciliationRuns } from "@nearpay-internal/spec";
 import { Callout, Skeleton, Stat, StatGroup, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
@@ -76,7 +76,7 @@ export function Overview() {
       href: `/kyb/${k.account_id}`,
       accountId: k.account_id,
       merchant: k.account_display_name,
-      reason: "Business details review",
+      reason: "Business details submitted (manual review mode)",
       created: k.submitted_at ?? k.created,
       severity: "medium",
     })),
@@ -127,10 +127,16 @@ export function Overview() {
             }
           />
           <Stat
-            label="Business reviews"
+            label="Businesses pending"
             value={kyb.loading ? <Skeleton shape="stat" width="25" /> : kyb.error ? "—" : count(kyb.data)}
             sub={
-              kyb.error ? "Could not load reviews" : kyb.loading ? "Loading…" : <Link to="/kyb">Awaiting review</Link>
+              kyb.error ? (
+                "Could not load businesses"
+              ) : kyb.loading ? (
+                "Loading…"
+              ) : (
+                <Link to="/kyb">Only in manual review mode</Link>
+              )
             }
           />
           <Stat
@@ -155,7 +161,7 @@ export function Overview() {
         </StatGroup>
         <Section
           title="Needs attention"
-          description="Open cases and business reviews, highest priority first."
+          description="Open cases and pending businesses, highest priority first."
           actions={<Link to="/cases">View all cases</Link>}
         >
           {queueError ? (
