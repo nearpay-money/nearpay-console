@@ -1,6 +1,8 @@
 /**
- * "NearPay Operations · Internal workspace" shell (Figma b02/b03): sidebar with the operations nav,
- * top bar with breadcrumb, mode pill and notifications, plus a global kill-switch banner.
+ * Console shell on the kit AppShell v2 (design v2, same navy sidebar as the merchant dashboard):
+ * "NearPay Ops" lock-up, the operations nav, top bar with breadcrumb, mode pill and notifications,
+ * plus a global kill-switch banner. What tells it apart from the dashboard is deliberately small:
+ * the "Ops" badge next to the wordmark and a thin violet accent line along the top of the window.
  */
 import { getOpsKillSwitch, listOpsFindings } from "@nearpay-internal/spec";
 import { AppShell, Breadcrumb, Button, Callout, type NavGroup } from "@nearpay-internal/ui";
@@ -8,6 +10,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { formatDateTime } from "../lib/format";
 import { ROLE_LABEL } from "../lib/permissions";
 import { passkeyBadge } from "../lib/session";
+import { OpsLockup } from "../ui/OpsLockup";
 import { Link, useApp } from "./context";
 
 export type Section =
@@ -97,8 +100,9 @@ export function Shell({
 }) {
   const app = useApp();
   const signals = useSignals();
-  const group = (label: string, items: readonly [Section, string, string][]): NavGroup => ({
+  const group = (label: string, items: readonly [Section, string, string][], hideLabel = false): NavGroup => ({
     label,
+    hideLabel,
     items: items.map(([id, l, path]) => ({ id, label: l, href: app.href(path), current: id === section })),
   });
   const items = [
@@ -113,9 +117,11 @@ export function Shell({
   const session = app.session;
   return (
     <AppShell
-      workspace={{ name: "NearPay Operations", subtitle: "Internal workspace" }}
+      className="c-ops-shell"
+      brand={<OpsLockup />}
+      workspace={{ name: "Internal workspace", subtitle: "Every action is audited", initial: "" }}
       navLabel="Operations"
-      nav={[group("Operations", OPERATIONS), group("Risk controls", RISK)]}
+      nav={[group("Operations", OPERATIONS, true), group("Risk controls", RISK)]}
       footerLinks={[{ label: "Help & support", href: "https://docs.nearpay.money/operations" }]}
       user={
         session
@@ -133,7 +139,7 @@ export function Shell({
         onClick: () => app.navigate(app.href("/sentinel?tab=findings")),
       }}
       topbarActions={
-        <Button variant="ghost" size="sm" onClick={() => void app.signOut()}>
+        <Button variant="quiet" size="sm" onClick={() => void app.signOut()}>
           Sign out
         </Button>
       }

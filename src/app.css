@@ -1,12 +1,61 @@
 /*
- * nearpay-console — app layout on top of @nearpay-internal/ui (unlayered, so it wins over the kit's
- * layers without !important). Prefix `c-`. No inline styles anywhere (CSP style-src 'self').
+ * nearpay-console — app layout on top of @nearpay-internal/ui 0.5 (design v2; unlayered, so it wins
+ * over the kit's layers without !important). Prefix `c-`. No inline styles anywhere (CSP
+ * style-src 'self'). The visual language is the merchant dashboard's: navy sidebar, canvas
+ * #F3F6F9, white 16 px panels without borders, quiet table headers, v2 status pills.
  */
 
 html,
 body {
   margin: 0;
-  background: var(--np-color-surface);
+  background: var(--np-color-bg);
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Ops cue: the console looks like the dashboard, plus a thin violet line and the "Ops" badge   */
+/* ------------------------------------------------------------------------------------------ */
+
+.c-ops-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 30;
+  height: 3px;
+  background: var(--np-color-route);
+  pointer-events: none;
+}
+
+.c-ops-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.c-ops-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid currentColor;
+  border-radius: var(--np-radius-pill);
+  color: var(--np-color-info-fg);
+  background: var(--np-color-info-bg);
+  font-size: 12px;
+  font-weight: var(--np-weight-semibold);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+.np-surface-navy .c-ops-badge {
+  color: var(--np-violet-on-navy);
+  background: var(--np-navy-raised);
+}
+.c-ops-lockup--lg {
+  gap: var(--np-space-3);
+}
+.c-ops-lockup--lg .c-ops-badge {
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--np-text-small);
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -16,77 +65,198 @@ body {
 .c-page {
   display: flex;
   flex-direction: column;
-  gap: var(--np-space-8);
-  max-width: 1120px;
+  gap: var(--np-space-6);
+  max-width: 1240px;
 }
 .c-page--wide {
-  max-width: 1280px;
+  max-width: 1320px;
+}
+.c-page-header {
+  margin-top: var(--np-space-2);
+}
+.c-page-header .np-page-header__title {
+  font-size: var(--np-text-title);
+  letter-spacing: var(--np-tracking-title);
 }
 .c-page-header .np-page-header__subtitle {
   font-size: var(--np-text-body);
+  color: var(--np-color-text-secondary);
 }
 .c-page-header .np-page-header__status .np-row {
   gap: var(--np-space-2);
 }
 
-.c-stats.np-stat-group {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--np-space-6) var(--np-space-8);
+/* Stat rows → KPI tiles (white 16 px cards on the canvas, as on the dashboard home) */
+.c-stats.np-stat-group,
+div.c-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--np-space-4);
+}
+.c-stats .np-stat {
+  padding: 18px var(--np-space-5);
+  border-radius: var(--np-radius-card);
+  background: var(--np-color-surface);
 }
 .c-stats .np-stat__value .np-badge {
   font-size: var(--np-text-small);
   vertical-align: middle;
 }
 .c-stats > .np-skeleton {
-  min-height: 96px;
-}
-div.c-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--np-space-8);
+  min-height: 112px;
+  border-radius: var(--np-radius-card);
 }
 .c-stat-pair {
   display: inline-block;
-  font-size: var(--np-text-h3);
-  line-height: 40px;
+  font-size: var(--np-text-h4);
+  line-height: 28px;
   overflow-wrap: anywhere;
 }
 
-.c-section {
+/* Overview KPI grid: four tiles, the kill-switch tile turns red while engaged */
+.c-kpis.np-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.c-kpi--danger.np-kpi {
+  background: var(--np-color-danger-bg);
+}
+.c-kpi--danger .np-kpi__label,
+.c-kpi--danger .np-kpi__sub,
+.c-kpi--danger .np-kpi__value {
+  color: var(--np-color-danger-fg);
+}
+.c-kpi .np-kpi__sub a {
+  font-weight: var(--np-weight-medium);
+}
+.c-kpi-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+}
+.c-kpi-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--np-color-success-fg);
+  flex-shrink: 0;
+}
+.c-kpi--danger .c-kpi-dot {
+  background: var(--np-color-danger-fg);
+}
+
+/* Sections are white panels; a table inside bleeds to the panel edges like "Recent payments" */
+.c-section,
+.c-panel {
   display: flex;
   flex-direction: column;
   gap: var(--np-space-4);
   min-width: 0;
+  padding: 20px 22px;
+  border-radius: var(--np-radius-card);
+  background: var(--np-color-surface);
+}
+.c-section {
+  overflow: hidden;
 }
 .c-section__head {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--np-space-4);
   flex-wrap: wrap;
 }
+.c-section__head h2,
+.c-panel__title {
+  font-size: var(--np-text-h4);
+  font-weight: var(--np-weight-strong);
+  line-height: 24px;
+  letter-spacing: var(--np-tracking-title);
+}
 .c-section__head p {
   margin-top: var(--np-space-1);
+}
+.c-section__actions {
+  font-size: 15px;
+  font-weight: var(--np-weight-semibold);
+}
+.c-section > .np-table-wrap,
+.c-panel > .np-table-wrap {
+  margin-inline: -22px;
+}
+.c-section > .np-table-wrap:last-child,
+.c-panel > .np-table-wrap:last-child {
+  margin-bottom: -20px;
+}
+.c-section .np-table-scroll,
+.c-panel .np-table-scroll {
+  border: 0;
+  border-radius: 0;
+}
+.c-section .np-pager,
+.c-panel .np-pager {
+  margin: 0;
+  padding: var(--np-space-3) 22px;
+  border-top: 1px solid var(--np-color-border-subtle);
+}
+.c-section .np-timeline {
+  margin-top: calc(-1 * var(--np-space-2));
+}
+.c-section .np-timeline__item {
+  border-bottom-color: var(--np-color-border-subtle);
+}
+.c-section .np-timeline__item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Tables straight on the canvas are flat white panels too (no hairline frame), pager inside */
+.c-page .np-table-wrap--outline {
+  overflow: hidden;
+  border-radius: var(--np-radius-card);
+  background: var(--np-color-surface);
+}
+.c-page .np-table-wrap--outline .np-table-scroll {
+  border-color: transparent;
+  border-radius: 0;
+}
+.c-page .np-table-wrap--outline > .np-pager {
+  margin: 0;
+  padding: var(--np-space-3) 22px;
+  border-top: 1px solid var(--np-color-border-subtle);
+}
+
+/* Cards on the canvas: flat white, 16 px (the side "Actions" cards, kill switch, screening) */
+.c-page .np-card {
+  border-color: transparent;
+}
+.c-page .np-card--pad-md {
+  padding: 20px 22px;
+}
+.c-page .np-card__title {
+  font-size: var(--np-text-h4);
+  line-height: 24px;
+  letter-spacing: var(--np-tracking-title);
 }
 
 .c-two-col {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
-  gap: var(--np-space-12);
+  gap: var(--np-space-6);
   align-items: start;
 }
 .c-two-col--review {
-  grid-template-columns: minmax(0, 1fr) 416px;
+  grid-template-columns: minmax(0, 1fr) 400px;
 }
 .c-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--np-space-8) var(--np-space-12);
-  align-items: start;
+  gap: var(--np-space-4);
+  align-items: stretch;
 }
 .c-side-card {
   position: sticky;
-  top: var(--np-space-6);
+  top: calc(var(--np-size-topbar) + var(--np-space-4));
 }
 .c-resolve .np-card__title {
   font-size: var(--np-text-h3);
@@ -101,11 +271,35 @@ div.c-stats {
   margin-top: var(--np-space-2);
   gap: var(--np-space-4);
   font-size: var(--np-text-small);
+  font-weight: var(--np-weight-semibold);
 }
 
 .c-banner {
-  margin-bottom: var(--np-space-8);
-  max-width: 1280px;
+  margin-bottom: var(--np-space-6);
+  max-width: 1320px;
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Danger zone: restrictive actions sit apart, under a rule, with a short heading               */
+/* ------------------------------------------------------------------------------------------ */
+
+.c-danger-zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--np-space-3);
+  padding-top: var(--np-space-4);
+  border-top: 1px solid var(--np-color-border-subtle);
+}
+.c-quiet-danger.np-button {
+  color: var(--np-color-danger-fg);
+}
+.c-quiet-danger.np-button:hover:not(:disabled) {
+  background: var(--np-color-danger-bg);
+}
+.c-danger-zone__title {
+  font-size: var(--np-text-small);
+  font-weight: var(--np-weight-semibold);
+  color: var(--np-color-danger-fg);
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -116,18 +310,18 @@ div.c-stats {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--np-space-4);
+  gap: var(--np-space-3) var(--np-space-4);
 }
 .c-filters .np-field {
   min-width: 180px;
 }
 .c-filters .np-select,
 .c-filters .np-input {
-  min-height: var(--np-size-control);
+  min-height: 44px;
 }
 .c-filters .np-select__control,
 .c-filters .np-input__control {
-  height: calc(var(--np-size-control) - 2px);
+  height: 42px;
   font-size: var(--np-text-small);
 }
 .c-filters__search {
@@ -138,6 +332,9 @@ div.c-stats {
 }
 .c-filters__submit {
   padding-bottom: 0;
+}
+.c-filters .np-button {
+  min-height: 44px;
 }
 .c-inline-form {
   display: flex;
@@ -154,43 +351,9 @@ div.c-stats {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Controls the kit does not have yet                                                           */
+/* Small controls and text                                                                     */
 /* ------------------------------------------------------------------------------------------ */
 
-.c-textarea {
-  display: block;
-  width: 100%;
-  min-height: var(--np-size-field);
-  padding: var(--np-space-4);
-  border: 1px solid var(--np-color-border-control);
-  border-radius: var(--np-radius-control);
-  background: var(--np-color-surface);
-  color: var(--np-color-text);
-  font: inherit;
-  font-size: var(--np-text-body);
-  line-height: 24px;
-  resize: vertical;
-  transition:
-    border-color var(--np-duration-fast) var(--np-ease),
-    box-shadow var(--np-duration-fast) var(--np-ease);
-}
-.c-textarea::placeholder {
-  color: var(--np-color-text-secondary);
-}
-.c-textarea:hover {
-  border-color: var(--np-color-text-secondary);
-}
-.c-textarea:focus {
-  outline: none;
-  border-color: var(--np-color-focus);
-  box-shadow: 0 0 0 1px var(--np-color-focus);
-}
-.c-textarea[aria-invalid="true"] {
-  border-color: var(--np-color-danger-fg);
-}
-.c-textarea[aria-invalid="true"]:focus {
-  box-shadow: 0 0 0 1px var(--np-color-danger-fg);
-}
 .c-field-error {
   color: var(--np-color-danger-fg);
   font-size: var(--np-text-caption);
@@ -221,7 +384,7 @@ div.c-stats {
 .c-id__value,
 .c-mono {
   font-family: var(--np-font-mono);
-  font-size: 0.9em;
+  font-size: 0.875em;
 }
 .c-id__value {
   overflow-wrap: anywhere;
@@ -230,11 +393,12 @@ div.c-stats {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 28px;
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--np-radius-badge);
+  border-radius: 8px;
   background: transparent;
   color: var(--np-color-text-secondary);
   cursor: pointer;
@@ -242,6 +406,10 @@ div.c-stats {
 .c-id__copy:hover {
   background: var(--np-color-surface-muted);
   color: var(--np-color-text);
+}
+.c-id__copy:focus-visible {
+  outline: var(--np-focus-width) solid var(--np-color-focus);
+  outline-offset: var(--np-focus-offset);
 }
 .c-mono-input .np-input__control {
   font-family: var(--np-font-mono);
@@ -252,7 +420,7 @@ div.c-stats {
   word-break: break-word;
 }
 .c-strong {
-  font-weight: var(--np-weight-medium);
+  font-weight: var(--np-weight-semibold);
 }
 .c-external {
   display: inline-flex;
@@ -267,13 +435,19 @@ div.c-stats {
 .c-details summary {
   cursor: pointer;
   color: var(--np-color-accent-text);
+  font-weight: var(--np-weight-medium);
+}
+.c-details summary:focus-visible {
+  outline: var(--np-focus-width) solid var(--np-color-focus);
+  outline-offset: var(--np-focus-offset);
+  border-radius: 4px;
 }
 .c-pre {
   max-width: 360px;
   margin: var(--np-space-2) 0 0;
-  padding: var(--np-space-2);
+  padding: var(--np-space-3);
   overflow: auto;
-  border-radius: var(--np-radius-badge);
+  border-radius: var(--np-radius-control);
   background: var(--np-color-surface-muted);
   font-family: var(--np-font-mono);
   font-size: 12px;
@@ -281,11 +455,22 @@ div.c-stats {
 }
 
 /* ------------------------------------------------------------------------------------------ */
+/* Evidence trail: the post-success finality re-check (rails §8.12, ADR-0022)                   */
+/* ------------------------------------------------------------------------------------------ */
+
+.c-trail-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--np-space-2);
+}
+
+/* ------------------------------------------------------------------------------------------ */
 /* Two-person approvals, kill switch                                                            */
 /* ------------------------------------------------------------------------------------------ */
 
-.c-approval {
-  border-color: var(--np-color-warning-fg);
+.c-page .c-approval {
+  border-color: var(--np-color-warning-bg);
+  box-shadow: inset 4px 0 0 var(--np-color-warning-fg);
 }
 .c-approval__head {
   display: flex;
@@ -297,12 +482,20 @@ div.c-stats {
 .c-two-person {
   padding: var(--np-space-3) var(--np-space-4);
   border-radius: var(--np-radius-control);
-  background: var(--np-color-warning-bg);
+  background: var(--np-color-warning-subtle);
   color: var(--np-color-text);
   font-size: var(--np-text-small);
+  line-height: 20px;
 }
 .c-two-person strong {
-  font-weight: var(--np-weight-medium);
+  font-weight: var(--np-weight-semibold);
+  color: var(--np-color-warning-strong);
+}
+.c-two-person--solo {
+  background: var(--np-color-info-bg);
+}
+.c-two-person--solo strong {
+  color: var(--np-color-info-fg);
 }
 
 .c-ks__body {
@@ -318,9 +511,9 @@ div.c-stats {
   display: flex;
   flex-direction: column;
   gap: var(--np-space-2);
-  max-width: 280px;
+  max-width: 300px;
 }
-.c-ks--engaged {
+.c-page .c-ks--engaged {
   border-color: var(--np-color-danger-fg);
   background: var(--np-color-danger-bg);
 }
@@ -330,40 +523,69 @@ div.c-stats {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Auth                                                                                         */
+/* Auth: navy brand side + sign-in card (no shell — the operator is not signed in)              */
 /* ------------------------------------------------------------------------------------------ */
 
 .c-auth {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) 7fr;
+  background: var(--np-color-bg);
+}
+.c-auth__side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--np-space-10);
+  padding: var(--np-space-10) var(--np-space-10) var(--np-space-8);
+  border-top: 3px solid var(--np-color-on-navy-route);
+  background: var(--np-color-navy);
+  color: var(--np-color-on-navy-secondary);
+}
+.c-auth__pitch {
+  max-width: 400px;
+}
+.c-auth__pitch-title {
+  color: var(--np-color-on-navy);
+  font-size: var(--np-text-h2);
+  font-weight: var(--np-weight-strong);
+  line-height: 1.15;
+  letter-spacing: var(--np-tracking-heading);
+}
+.c-auth__pitch-body {
+  margin-top: var(--np-space-3);
+  font-size: var(--np-text-body);
+  line-height: var(--np-leading-body);
+}
+.c-auth__side-foot {
+  font-size: var(--np-text-caption);
+  line-height: 18px;
+  color: var(--np-color-on-navy-muted);
+}
+.c-auth__main {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--np-space-6);
+  gap: var(--np-space-5);
   padding: var(--np-space-12) var(--np-size-gutter-mobile);
-  background: var(--np-color-bg);
 }
 .c-auth__card {
   width: min(100%, 440px);
   display: flex;
   flex-direction: column;
   gap: var(--np-space-5);
-  padding: var(--np-space-10) var(--np-space-8);
-  border: 1px solid var(--np-color-border);
-  border-radius: var(--np-radius-card);
+  padding: var(--np-space-8);
+  border-radius: var(--np-radius-panel);
   background: var(--np-color-surface);
 }
 .c-auth__brand {
-  display: flex;
-  flex-direction: column;
-  gap: var(--np-space-2);
-  margin-bottom: var(--np-space-3);
+  display: none;
 }
-.c-auth__workspace {
-  font-size: var(--np-text-caption);
-  color: var(--np-color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.c-auth__title {
+  font-size: var(--np-text-h3);
+  font-weight: var(--np-weight-strong);
+  letter-spacing: var(--np-tracking-title);
 }
 .c-auth__foot {
   max-width: 440px;
@@ -385,18 +607,32 @@ div.c-stats {
   .c-two-col,
   .c-two-col--review {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--np-space-8);
   }
   .c-side-card {
     position: static;
+  }
+  .c-kpis.np-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 959px) {
   .c-grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }
-  .c-banner {
-    margin-bottom: var(--np-space-6);
+  .c-auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .c-auth__side {
+    display: none;
+  }
+  .c-auth__brand {
+    display: flex;
+    margin-bottom: var(--np-space-2);
+  }
+  .c-auth__main {
+    justify-content: flex-start;
+    padding-top: var(--np-space-10);
+    border-top: 3px solid var(--np-color-route);
   }
 }
 @media (max-width: 720px) {
@@ -414,12 +650,45 @@ div.c-stats {
     min-width: 0;
   }
   .c-page {
-    gap: var(--np-space-6);
+    gap: var(--np-space-4);
+  }
+  .c-page-header .np-page-header__title {
+    font-size: var(--np-text-h2);
   }
   .c-stats.np-stat-group,
   div.c-stats {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--np-space-5);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--np-space-3);
+  }
+  .c-stats .np-stat {
+    padding: var(--np-space-4);
+  }
+  .c-kpis.np-kpi-grid {
+    gap: var(--np-space-3);
+  }
+  .c-kpis .np-kpi {
+    padding: var(--np-space-4);
+  }
+  .c-section,
+  .c-panel,
+  .c-page .np-card--pad-md {
+    padding: var(--np-space-4);
+  }
+  .c-section > .np-table-wrap,
+  .c-panel > .np-table-wrap {
+    margin-inline: calc(-1 * var(--np-space-4));
+  }
+  .c-section > .np-table-wrap:last-child,
+  .c-panel > .np-table-wrap:last-child {
+    margin-bottom: calc(-1 * var(--np-space-4));
+  }
+  .c-section .np-table th:first-child,
+  .c-section .np-table td:first-child {
+    padding-left: var(--np-space-4);
+  }
+  .c-section .np-table th:last-child,
+  .c-section .np-table td:last-child {
+    padding-right: var(--np-space-4);
   }
   .c-filters {
     flex-direction: column;
@@ -440,7 +709,7 @@ div.c-stats {
     width: 100%;
   }
   .c-auth__card {
-    padding: var(--np-space-8) var(--np-space-6);
+    padding: var(--np-space-6);
   }
   .c-ks__actions {
     max-width: none;

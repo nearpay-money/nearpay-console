@@ -164,6 +164,27 @@ export class MockApi {
         observation(this.held.id, { source: "hot_poll", observed_at: iso(NOW - 15 * 60) }),
       ],
     ],
+    [
+      this.succeeded.id,
+      [
+        observation(this.succeeded.id, {
+          source: "watcher",
+          provider_status: null,
+          observed_at: iso(NOW - 3600),
+          payload: { transfer: "0x5e6f", confirmations: 1 },
+        }),
+        // rails §8.12 (ADR-0022): the post-success finality re-check failed — flagged, never applied
+        observation(this.succeeded.id, {
+          source: "verifier",
+          provider_status: null,
+          applied: false,
+          observed_at: iso(NOW - 1800),
+          payload: {
+            finality_recheck: { outcome: "failed", reason: "block hash changed at finality", tx_hash: "0x5e6f" },
+          },
+        }),
+      ],
+    ],
   ]);
   heldCase: CaseT = complianceCase({
     kind: "held_execution",

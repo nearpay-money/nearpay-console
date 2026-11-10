@@ -89,19 +89,28 @@ export function Blocklist() {
     { key: "reason", header: "Reason", cell: (e) => e.reason },
     {
       key: "by",
+      muted: true,
       header: "Added by",
       hideOnNarrow: true,
       cell: (e) => (e.created_by === app.session?.operator.id ? "You" : e.created_by),
     },
-    { key: "created", header: "Added", numeric: true, hideOnNarrow: true, cell: (e) => formatDateTime(e.created) },
+    {
+      key: "created",
+      muted: true,
+      header: "Added",
+      numeric: true,
+      hideOnNarrow: true,
+      cell: (e) => formatDateTime(e.created),
+    },
     {
       key: "actions",
       header: <span className="np-sr-only">Actions</span>,
       align: "end",
       cell: (e) => (
         <Button
-          variant="ghost"
+          variant="quiet"
           size="sm"
+          className="c-quiet-danger"
           onClick={() => setRemoving(e)}
           disabled={Boolean(removeBlocked)}
           aria-describedby={removeBlocked ? `${gateId}-rm` : undefined}

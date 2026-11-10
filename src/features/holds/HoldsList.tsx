@@ -5,7 +5,16 @@
 
 import type { z } from "@nearpay/spec";
 import { type Execution, listOpsExecutions } from "@nearpay-internal/spec";
-import { Field, Pager, SearchInput, Select, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
+import {
+  Field,
+  Pager,
+  SearchInput,
+  Select,
+  StatusBadge,
+  Table,
+  type TableColumn,
+  type Tone,
+} from "@nearpay-internal/ui";
 import { useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";
@@ -17,11 +26,12 @@ import { ErrorState, FilterBar, Header, Page } from "../../ui/ui";
 
 type Ex = z.output<typeof Execution>;
 
-export const STATE_TONE: Readonly<Record<string, "success" | "warning" | "danger" | "neutral">> = {
+/** v2 pills: in-flight states are `progress` (violet), a hold needs review (`warning`). */
+export const STATE_TONE: Readonly<Record<string, Tone>> = {
   held: "warning",
-  verifying: "warning",
-  settling: "warning",
-  deposit_detected: "warning",
+  verifying: "progress",
+  settling: "progress",
+  deposit_detected: "progress",
   incomplete_deposit: "warning",
   awaiting_deposit: "neutral",
   quoting: "neutral",
@@ -87,6 +97,7 @@ export function HoldsList() {
     },
     {
       key: "age",
+      muted: true,
       header: state === "held" ? "Held for" : "Updated",
       numeric: true,
       hideOnNarrow: true,

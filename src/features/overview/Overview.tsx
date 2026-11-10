@@ -1,13 +1,29 @@
 /**
- * Operations overview (Figma b02/b03 "Operations overview"): payment reviews (Verifier holds),
- * businesses pending (manual review mode only, ADR-0024), reconciliation exceptions, and one queue of open cases.
+ * Operations overview (design v2 KPI tiles, like the dashboard home): payment reviews (Verifier
+ * holds), businesses pending (manual review mode only, ADR-0024), reconciliation exceptions, the
+ * kill-switch state, and one queue of open cases.
  */
-import { listOpsCases, listOpsExecutions, listOpsKybCases, listOpsReconciliationRuns } from "@nearpay-internal/spec";
-import { Callout, Skeleton, Stat, StatGroup, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
+import {
+  getOpsKillSwitch,
+  listOpsCases,
+  listOpsExecutions,
+  listOpsKybCases,
+  listOpsReconciliationRuns,
+} from "@nearpay-internal/spec";
+import { Callout, cx, KpiCard, KpiGrid, Skeleton, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
 import { useEffect } from "react";
 import { Link, useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";
-import { caseKindLabel, caseRef, formatAge, formatTime, kybRef, SEVERITY_RANK, severityLabel } from "../../lib/format";
+import {
+  caseKindLabel,
+  caseRef,
+  formatAge,
+  formatDateTime,
+  formatTime,
+  kybRef,
+  SEVERITY_RANK,
+  severityLabel,
+} from "../../lib/format";
 import { useAsync, useNow } from "../../lib/hooks";
 import { ErrorState, Header, Page, Section } from "../../ui/ui";
 
@@ -43,6 +59,7 @@ export function Overview() {
     [live],
   );
   const cases = useAsync(() => app.api.call(listOpsCases, { query: { livemode: live, limit: 50 } }), [live]);
+  const ks = useAsync(() => app.api.call(getOpsKillSwitch), []);
 
   useEffect(() => {
     for (const k of kyb.data?.data ?? []) app.rememberMerchant(k.account_id, k.account_display_name);
@@ -88,7 +105,14 @@ export function Overview() {
     { key: "case", header: "Case", primary: true, cell: (r) => r.ref },
     { key: "merchant", header: "Merchant", cell: (r) => r.merchant ?? "…" },
     { key: "reason", header: "Reason", cell: (r) => r.reason },
-    { key: "age", header: "Age", numeric: true, hideOnNarrow: true, cell: (r) => formatAge(r.created, now) },
+    {
+      key: "age",
+      muted: true,
+      header: "Age",
+      numeric: true,
+      hideOnNarrow: true,
+      cell: (r) => formatAge(r.created, now),
+    },
     {
       key: "priority",
       header: "Priority",
@@ -110,8 +134,9 @@ export function Overview() {
     <Shell section="overview">
       <Page>
         <Header title="Operations overview" subtitle="Review exceptions and keep merchant payments moving." />
-        <StatGroup className="c-stats">
-          <Stat
+        <KpiGrid className="c-kpis">
+          <KpiCard
+            className="c-kpi"
             label="Payment reviews"
             value={holds.loading ? <Skeleton shape="stat" width="25" /> : holds.error ? "—" : heldCount}
             sub={
@@ -125,8 +150,10 @@ export function Overview() {
                 <Link to="/holds">{oldestHeld ? `Oldest held ${formatAge(oldestHeld, now)}` : "Open holds"}</Link>
               )
             }
+            tone={heldCount && heldCount !== "0" ? "warning" : "default"}
           />
-          <Stat
+          <KpiCard
+            className="c-kpi"
             label="Businesses pending"
             value={kyb.loading ? <Skeleton shape="stat" width="25" /> : kyb.error ? "—" : count(kyb.data)}
             sub={
@@ -139,7 +166,8 @@ export function Overview() {
               )
             }
           />
-          <Stat
+          <KpiCard
+            className="c-kpi"
             label="Reconciliation"
             value={
               exceptions.loading ? (
@@ -158,7 +186,36 @@ export function Overview() {
                   : "No runs yet"
             }
           />
-        </StatGroup>
+          <KpiCard
+            className={cx("c-kpi", ks.data?.engaged && "c-kpi--danger")}
+            label="Kill switch"
+            value={
+              ks.loading ? (
+                <Skeleton shape="stat" width="50" />
+              ) : ks.error || !ks.data ? (
+                "—"
+              ) : (
+                <span className="c-kpi-state">
+                  <span className="c-kpi-dot" aria-hidden="true" />
+                  {ks.data.engaged ? "Engaged" : "Off"}
+                </span>
+              )
+            }
+            sub={
+              ks.error ? (
+                "Could not load the kill switch"
+              ) : ks.loading || !ks.data ? (
+                "Loading…"
+              ) : (
+                <Link to="/sentinel">
+                  {ks.data.engaged
+                    ? `Live quoting stopped since ${formatDateTime(ks.data.updated_at)}`
+                    : "Live quoting runs normally"}
+                </Link>
+              )
+            }
+          />
+        </KpiGrid>
         <Section
           title="Needs attention"
           description="Open cases and pending businesses, highest priority first."

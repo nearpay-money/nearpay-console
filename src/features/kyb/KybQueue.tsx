@@ -54,13 +54,21 @@ export function KybQueue() {
     },
     {
       key: "type",
+      muted: true,
       header: "Business type",
       hideOnNarrow: true,
       cell: (c) => (c.profile.business_type ? businessTypeLabel(c.profile.business_type) : "—"),
     },
-    { key: "country", header: "Country", hideOnNarrow: true, cell: (c) => c.profile.country_of_incorporation ?? "—" },
+    {
+      key: "country",
+      muted: true,
+      header: "Country",
+      hideOnNarrow: true,
+      cell: (c) => c.profile.country_of_incorporation ?? "—",
+    },
     {
       key: "submitted",
+      muted: true,
       header: "Submitted",
       numeric: true,
       cell: (c) => (c.submitted_at ? `${formatAge(c.submitted_at, now)} ago` : "Not submitted"),

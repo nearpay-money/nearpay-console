@@ -85,7 +85,7 @@ export function ApprovalCard({
         {pending ? (
           <>
             {selfComplete ? (
-              <p className="c-two-person">
+              <p className="c-two-person c-two-person--solo">
                 <strong>You are the only operator.</strong>{" "}
                 {waiting && solo.available_at !== null
                   ? `You can complete this yourself from ${formatDateTime(solo.available_at)} (${formatUntil(solo.available_at)}), after confirming again and writing a reason. It is recorded as a single-operator action and alerts the team.`

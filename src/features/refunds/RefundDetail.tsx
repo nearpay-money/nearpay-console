@@ -20,7 +20,7 @@ import { httpsOnly } from "../holds/ExecutionReview";
 
 const TONE = {
   requires_action: "warning",
-  pending: "warning",
+  pending: "progress",
   succeeded: "success",
   failed: "danger",
   canceled: "neutral",

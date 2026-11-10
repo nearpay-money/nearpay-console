@@ -32,7 +32,7 @@ nearpay-console/
 │   │                   refunds, sentinel, reconciliation, audit, auth (sign-in, enrolment)
 │   ├── lib/            API client (OPS_ROUTES only), errors, session, permissions, formatting,
 │   │                   assets, reconciliation maths + CSV, review checks
-│   └── ui/             console building blocks the kit does not have yet
+│   └── ui/             console building blocks on the kit (sections, dialogs, approval card, Ops lock-up)
 ├── test/
 │   ├── unit/           Vitest (coverage gate ≥ 90 % branches/lines on src/lib)
 │   └── e2e/            Playwright against an in-process, spec-validating mock of OPS_ROUTES
@@ -55,8 +55,8 @@ NP_SHOTS_DIR=/tmp/shots pnpm e2e screens   # 1440/390 screenshots of every main 
 
 ## Status
 
-Stage 2 (step 2.3): all console pages from the LLD on `@nearpay-internal/ui` 0.2.0 and `@nearpay-internal/spec` 0.2.0.
+Stage 2 (step 2.3): all console pages from the LLD on `@nearpay-internal/spec` 0.2.0. Design v2 (2026-11-11): `@nearpay-internal/ui` 0.5.0 — kit AppShell v2 with the navy sidebar like the merchant dashboard; the console is told apart by the "NearPay Ops" lock-up (mark + wordmark + "Ops" badge), a thin violet line along the top of the window and an app-icon favicon with a violet dot (`public/`, generated from the kit's brand geometry).
 
 ## Built with
 
-Libraries are listed here as they are added (hackathon rule Q-005): React 19, Vite, TypeScript, zod 4, `@simplewebauthn/browser`, `@nearpay-internal/ui` (DM Sans via `@fontsource-variable/dm-sans`, OFL), Biome, Vitest, Playwright. Code and documentation are written with AI assistance (Claude) under human direction and review.
+Libraries are listed here as they are added (hackathon rule Q-005): React 19, Vite, TypeScript, zod 4, `@simplewebauthn/browser`, `@nearpay-internal/ui` (Instrument Sans via `@fontsource-variable/instrument-sans`, OFL), Biome, Vitest, Playwright. Code and documentation are written with AI assistance (Claude) under human direction and review.

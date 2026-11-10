@@ -224,16 +224,6 @@ export function KybCase({ id }: { id: string }) {
                 No approval is needed: complete details go live automatically. Act only on abuse. Every action and
                 reason is audited.
               </p>
-              <Button
-                variant="danger"
-                fullWidth
-                onClick={() => setDecision("rejected")}
-                disabled={Boolean(blocked) || k.status === "rejected"}
-                aria-describedby={`${gateId}-n`}
-              >
-                Reject for abuse
-              </Button>
-              <Link to={`/merchants/${k.account_id}`}>Suspend or reinstate the merchant</Link>
               {canActivate ? (
                 <Button
                   variant="secondary"
@@ -257,7 +247,20 @@ export function KybCase({ id }: { id: string }) {
                   Request more info
                 </Button>
               ) : null}
-              <GateNote id={`${gateId}-n`}>{blocked ?? "Needs your security key."}</GateNote>
+              <div className="c-danger-zone">
+                <p className="c-danger-zone__title">Restrictive actions</p>
+                <Button
+                  variant="danger"
+                  fullWidth
+                  onClick={() => setDecision("rejected")}
+                  disabled={Boolean(blocked) || k.status === "rejected"}
+                  aria-describedby={`${gateId}-n`}
+                >
+                  Reject for abuse
+                </Button>
+                <Link to={`/merchants/${k.account_id}`}>Suspend or reinstate the merchant</Link>
+                <GateNote id={`${gateId}-n`}>{blocked ?? "Needs your security key."}</GateNote>
+              </div>
               {k.decided_at ? (
                 <KeyValueList
                   layout="stacked"

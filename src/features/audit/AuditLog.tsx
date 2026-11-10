@@ -53,9 +53,10 @@ export function AuditLog() {
   );
 
   const columns: TableColumn<Event>[] = [
-    { key: "when", header: "When", numeric: true, cell: (e) => formatDateTime(e.created) },
+    { key: "when", muted: true, header: "When", numeric: true, cell: (e) => formatDateTime(e.created) },
     {
       key: "actor",
+      muted: true,
       header: "Actor",
       cell: (e) => (
         <span className="c-cell-stack">

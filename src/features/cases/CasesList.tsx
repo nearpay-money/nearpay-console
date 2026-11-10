@@ -14,7 +14,7 @@ import { ErrorState, FilterBar, Header, Page } from "../../ui/ui";
 export type Case = z.output<typeof ComplianceCase>;
 
 export const SEVERITY_TONE = { critical: "danger", high: "warning", medium: "neutral", low: "neutral" } as const;
-export const CASE_STATUS_TONE = { open: "warning", investigating: "warning", closed: "neutral" } as const;
+export const CASE_STATUS_TONE = { open: "warning", investigating: "progress", closed: "neutral" } as const;
 
 export function CasesList() {
   const app = useApp();
@@ -73,11 +73,19 @@ export function CasesList() {
     },
     {
       key: "assignee",
+      muted: true,
       header: "Assignee",
       hideOnNarrow: true,
       cell: (c) => (c.assignee ? (c.assignee === me ? "You" : c.assignee) : "Unassigned"),
     },
-    { key: "age", header: "Age", numeric: true, hideOnNarrow: true, cell: (c) => formatAge(c.created, now) },
+    {
+      key: "age",
+      muted: true,
+      header: "Age",
+      numeric: true,
+      hideOnNarrow: true,
+      cell: (c) => formatAge(c.created, now),
+    },
   ];
 
   return (

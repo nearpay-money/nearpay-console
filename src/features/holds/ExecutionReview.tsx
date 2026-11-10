@@ -33,7 +33,7 @@ import { useEffect, useId, useState } from "react";
 import { Link, useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";
 import { assetLabel, formatAssetAmount } from "../../lib/assets";
-import { canReverify, type ReviewCheck, reviewChecks } from "../../lib/checks";
+import { canReverify, finalityRecheckOf, type ReviewCheck, reviewChecks } from "../../lib/checks";
 import {
   executionRef,
   executionStateLabel,
@@ -137,6 +137,9 @@ export function ExecutionReview({ id }: { id: string }) {
   const reverifyBlocked = app.blocked(reverifyOpsExecution);
   const kase = linkedCase.data;
   const explorer = httpsOnly(e.evidence?.explorer_url);
+  // the newest finality re-check observation decides the flag on the trail
+  const recheck = obs.reduce<ReturnType<typeof finalityRecheckOf>>((last, o) => finalityRecheckOf(o) ?? last, null);
+  const recheckAlert = recheck && (recheck.outcome === "failed" || recheck.outcome === "timeout") ? recheck : null;
 
   const requireNote = () => {
     if (!note.trim()) {
@@ -192,7 +195,7 @@ export function ExecutionReview({ id }: { id: string }) {
         />
 
         <div className="c-two-col c-two-col--review">
-          <div className="np-stack np-stack--lg">
+          <div className="c-panel np-stack--lg">
             <div className="np-stack">
               <h2 className="np-text-h3">
                 {held
@@ -428,7 +431,28 @@ export function ExecutionReview({ id }: { id: string }) {
           </Section>
         </div>
 
-        <Section title="Evidence trail" description="Raw provider and chain observations, oldest first.">
+        <Section
+          title="Evidence trail"
+          description="Raw provider and chain observations, oldest first."
+          actions={
+            recheck ? (
+              <span className="c-trail-flags">
+                <StatusBadge tone={recheck.tone}>{recheck.label}</StatusBadge>
+              </span>
+            ) : undefined
+          }
+        >
+          {recheckAlert ? (
+            <Callout tone={recheckAlert.outcome === "failed" ? "danger" : "warning"} title={recheckAlert.label} icon>
+              <p>
+                {`${
+                  recheckAlert.outcome === "failed"
+                    ? "At finality the transfer was no longer in the block that confirmed it."
+                    : "The chain did not reach finality for this block within the re-check window."
+                }${recheckAlert.reason ? ` Reason: ${recheckAlert.reason}.` : ""} The payment stays ${executionStateLabel(e.state).toLowerCase()}: decide with the merchant whether to refund or write it off.`}
+              </p>
+            </Callout>
+          ) : null}
           {obsState.error ? (
             <ErrorState error={obsState.error} onRetry={() => setObsTick((t) => t + 1)} />
           ) : obsState.loading ? (
@@ -441,14 +465,31 @@ export function ExecutionReview({ id }: { id: string }) {
             <div className="np-stack">
               <Timeline
                 label="Evidence trail"
-                items={obs.map((o) => ({
-                  id: o.id,
-                  time: formatTimeSeconds(o.observed_at),
-                  dateTime: isoOf(o.observed_at),
-                  title: `${observationSourceLabel(o.source)}${o.provider_status ? ` · ${o.provider_status}` : ""}`,
-                  body: `${formatDateTime(o.observed_at)} · ${o.applied ? "Changed the execution" : "No change"} · sha256 ${o.payload_sha256.slice(0, 12)}…${o.archive ? " · archived" : ""}`,
-                  state: o.source === "operator" ? "info" : o.applied ? "done" : "pending",
-                }))}
+                items={obs.map((o) => {
+                  const fr = finalityRecheckOf(o);
+                  const title = `${observationSourceLabel(o.source)}${o.provider_status ? ` · ${o.provider_status}` : ""}`;
+                  return {
+                    id: o.id,
+                    time: formatTimeSeconds(o.observed_at),
+                    dateTime: isoOf(o.observed_at),
+                    title: fr ? (
+                      <>
+                        {title} <StatusBadge tone={fr.tone}>{fr.label}</StatusBadge>
+                      </>
+                    ) : (
+                      title
+                    ),
+                    body: `${formatDateTime(o.observed_at)} · ${o.applied ? "Changed the execution" : "No change"} · sha256 ${o.payload_sha256.slice(0, 12)}…${o.archive ? " · archived" : ""}`,
+                    state:
+                      fr && fr.outcome !== "finalized"
+                        ? "attention"
+                        : o.source === "operator"
+                          ? "info"
+                          : o.applied
+                            ? "done"
+                            : "pending",
+                  };
+                })}
               />
               {obsMore ? (
                 <div>

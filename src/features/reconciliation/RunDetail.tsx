@@ -88,7 +88,7 @@ export function RunDetail({ id }: { id: string }) {
 
   const diffColumns = [
     { key: "kind", header: "Difference", primary: true, cell: (d: Diff) => reconDiffLabel(d.kind) },
-    { key: "detail", header: "Detail", cell: (d: Diff) => d.detail },
+    { key: "detail", muted: true, header: "Detail", cell: (d: Diff) => d.detail },
     {
       key: "statement",
       header: "Statement",

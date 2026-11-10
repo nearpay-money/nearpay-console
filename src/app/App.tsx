@@ -125,7 +125,7 @@ function Router() {
   const id = m?.params.id ?? "";
 
   useEffect(() => {
-    document.title = `${TITLES[name] ?? "Not found"} · NearPay Operations`;
+    document.title = `${TITLES[name] ?? "Not found"} · NearPay Ops`;
   }, [name]);
 
   // signed-in operators never see the auth pages; signed-out ones see only them

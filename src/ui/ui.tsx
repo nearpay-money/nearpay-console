@@ -1,7 +1,7 @@
 /**
- * Console building blocks that `@nearpay-internal/ui` does not have yet (listed as kit gaps in the
- * step report): page layout, error state with retry, textarea, action dialog, id text with copy,
- * detail skeleton, filter bar. Everything else comes from the kit.
+ * Console building blocks on top of `@nearpay-internal/ui`: page layout, section panels, error state
+ * with retry (friendly API errors), action dialog, id text with copy, detail skeleton, filter bar.
+ * The textarea is the kit's (0.3+), with the console's default height.
  */
 import {
   Button,
@@ -10,14 +10,15 @@ import {
   CopyIcon,
   cx,
   Field,
+  Textarea as KitTextarea,
   LiveRegion,
   Modal,
   PageHeader,
   type PageHeaderProps,
   Skeleton,
-  useField,
+  type TextareaProps,
 } from "@nearpay-internal/ui";
-import { forwardRef, type ReactNode, type TextareaHTMLAttributes, useEffect, useId, useRef, useState } from "react";
+import { forwardRef, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { friendlyError, StepUpCanceled } from "../lib/errors";
 
 /* ------------------------------------------------------------------------------------------ */
@@ -54,7 +55,7 @@ export function Section({
           </h2>
           {description ? <p className="np-text-small np-text-secondary">{description}</p> : null}
         </div>
-        {actions ? <div className="np-row">{actions}</div> : null}
+        {actions ? <div className="np-row c-section__actions">{actions}</div> : null}
       </div>
       {children}
     </section>
@@ -112,26 +113,11 @@ export function ActionError({ error }: { error: unknown }) {
 
 /* ------------------------------------------------------------------------------------------ */
 
-export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {}
+export type { TextareaProps };
 
-/** Multi-line input styled like the kit's Input; picks up Field wiring. */
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, rows = 3, ...rest },
-  ref,
-) {
-  const f = useField();
-  return (
-    <textarea
-      ref={ref}
-      rows={rows}
-      className={cx("c-textarea", className)}
-      id={rest.id ?? f?.id}
-      aria-describedby={cx(f?.describedBy, rest["aria-describedby"]) || undefined}
-      aria-invalid={rest["aria-invalid"] ?? (f?.invalid ? true : undefined)}
-      required={rest.required ?? (f?.required || undefined)}
-      {...rest}
-    />
-  );
+/** The kit's multi-line field (Field wiring, v2 focus ring), three rows high by default. */
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea({ rows = 3, ...rest }, ref) {
+  return <KitTextarea ref={ref} rows={rows} {...rest} />;
 });
 
 /* ------------------------------------------------------------------------------------------ */
