@@ -8,9 +8,9 @@ test.describe("overview and merchants", () => {
     await expect(page.getByText("Payment reviews")).toBeVisible();
     await expect(page.getByText("1 exception")).toBeVisible();
     const table = page.getByRole("table", { name: "Cases needing attention" });
-    await expect(table.getByRole("row")).toHaveCount(5); // header + 3 cases + 1 business review
+    await expect(table.getByRole("row")).toHaveCount(5); // header + 3 cases + 1 pending business (manual mode)
     await expect(table.getByText("Payment needs review")).toBeVisible();
-    await expect(table.getByText("Business details review")).toBeVisible();
+    await expect(table.getByText("Business details submitted (manual review mode)")).toBeVisible();
     await expect(page.getByText("Operational actions are recorded")).toBeVisible();
     expect(api.callsTo("listOpsExecutions")[0]?.query).toMatchObject({ livemode: "true", state: "held" });
   });

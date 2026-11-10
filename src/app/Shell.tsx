@@ -24,7 +24,7 @@ export type Section =
 const OPERATIONS: readonly [Section, string, string][] = [
   ["overview", "Overview", "/"],
   ["merchants", "Merchants", "/merchants"],
-  ["kyb", "Business reviews", "/kyb"],
+  ["kyb", "Businesses", "/kyb"],
   ["cases", "Cases", "/cases"],
   ["holds", "Payment holds", "/holds"],
   ["reconciliation", "Reconciliation", "/reconciliation"],

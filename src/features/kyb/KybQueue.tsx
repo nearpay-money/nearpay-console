@@ -1,4 +1,9 @@
-/** Business review (KYB) queue — compliance `listOpsKybCases` (default: pending, oldest submission first). */
+/**
+ * Businesses list (KYB; formerly the review queue) — compliance `listOpsKybCases`. Open onboarding
+ * (ADR-0024): businesses go live automatically, so the list opens on active businesses; operators view
+ * them, see screening results, reject for abuse and suspend/reinstate the merchant. `Submitted` only
+ * fills up when manual review is turned on (`NP_KYB_MODE=manual`).
+ */
 
 import type { z } from "@nearpay/spec";
 import { listOpsKybCases, type OpsKybCase } from "@nearpay-internal/spec";
@@ -14,16 +19,16 @@ import { KYB_TONE } from "../merchants/MerchantsList";
 type Case = z.output<typeof OpsKybCase>;
 
 const STATUSES = [
-  { id: "pending", label: "Pending review" },
-  { id: "needs_info", label: "Action needed" },
-  { id: "approved", label: "Reviewed" },
+  { id: "approved", label: "Active" },
   { id: "rejected", label: "Rejected" },
+  { id: "pending", label: "Submitted" },
+  { id: "needs_info", label: "Action needed" },
 ];
 
 export function KybQueue() {
   const app = useApp();
   const now = useNow();
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("approved");
   const list = usePaged(
     (cursor) => app.api.call(listOpsKybCases, { query: { status, limit: 20, starting_after: cursor } }),
     (c) => c.account_id,
@@ -34,7 +39,7 @@ export function KybQueue() {
   }, [list.data, app.rememberMerchant]);
 
   const columns: TableColumn<Case>[] = [
-    { key: "ref", header: "Review", primary: true, cell: (c) => kybRef(c.account_id) },
+    { key: "ref", header: "Business", primary: true, cell: (c) => kybRef(c.account_id) },
     {
       key: "merchant",
       header: "Merchant",
@@ -75,17 +80,17 @@ export function KybQueue() {
     <Shell section="kyb">
       <Page wide>
         <Header
-          title="Business reviews"
-          subtitle="Merchants’ self-declared business details. Approving enables live mode on details reviewed by NearPay."
+          title="Businesses"
+          subtitle="Merchants’ self-declared business details. Complete details go live automatically after geo screening; reject or suspend a business for abuse."
         />
-        <FilterBar label="Filter business reviews">
+        <FilterBar label="Filter businesses">
           <SegmentedControl label="Status" items={STATUSES} value={status} onChange={setStatus} size="sm" />
         </FilterBar>
         {list.error ? (
           <ErrorState error={list.error} onRetry={list.reload} />
         ) : (
           <Table
-            caption="Business reviews"
+            caption="Businesses"
             columns={columns}
             rows={list.data?.data ?? []}
             rowKey={(c) => c.account_id}
@@ -93,11 +98,13 @@ export function KybQueue() {
             loading={list.loading}
             loadingRows={5}
             empty={
-              status === "pending" ? "No business details are waiting for review." : "No reviews with this status."
+              status === "pending"
+                ? "Nothing is waiting: businesses go live automatically unless manual review is turned on."
+                : "No businesses with this status."
             }
             footer={
               <Pager
-                summary={list.data ? `Page ${list.pageIndex + 1} · ${list.data.data.length} reviews` : undefined}
+                summary={list.data ? `Page ${list.pageIndex + 1} · ${list.data.data.length} businesses` : undefined}
                 hasPrevious={list.hasPrevious}
                 hasNext={list.hasNext}
                 onPrevious={list.previous}

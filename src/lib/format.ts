@@ -129,9 +129,9 @@ export const caseActionLabel = label({
 
 export const kybStatusLabel = label({
   not_started: "Not submitted",
-  pending: "Pending review",
+  pending: "Submitted",
   needs_info: "Action needed",
-  approved: "Reviewed",
+  approved: "Active",
   rejected: "Rejected",
 });
 export const businessTypeLabel = label({

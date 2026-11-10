@@ -1,7 +1,10 @@
 /**
- * Business review detail (compliance `getOpsKybCase`, `decideOpsKybCase` with step-up). The details
- * are self-declared by the merchant (ADR-0020 d3): no documents, no vendor check. An approval means
- * "Business details reviewed by NearPay" — never a verified identity.
+ * Business detail (compliance `getOpsKybCase`, `decideOpsKybCase` with step-up). The details are
+ * self-declared by the merchant (ADR-0020 d3): no documents, no vendor check — never a verified
+ * identity. Open onboarding (ADR-0024): complete details go live automatically (decision by `system`)
+ * unless the geo policy blocks them; there is no approval step. Operators see the screening result,
+ * reject for abuse (or reverse a rejection) and suspend/reinstate the merchant (merchant page).
+ * Approve / request-info remain for manual review mode (`NP_KYB_MODE=manual`).
  */
 import { decideOpsKybCase, getOpsKybCase } from "@nearpay-internal/spec";
 import {
@@ -37,10 +40,10 @@ type Decision = "approved" | "rejected" | "needs_info";
 const DIALOG: Record<Decision, { title: string; confirm: string; description: string; variant: "primary" | "danger" }> =
   {
     approved: {
-      title: "Approve business details",
-      confirm: "Approve details",
+      title: "Activate business",
+      confirm: "Activate",
       description:
-        "Approving records that NearPay reviewed these self-declared details. Live mode turns on once the merchant also has an active live destination. Checkout shows the legal name as reviewed by NearPay — not as a verified identity.",
+        "Activates these self-declared details (manual review mode, or reversing a rejection). Live mode turns on once the merchant also has an active live destination. Checkout shows the declared legal name — never as a verified identity.",
       variant: "primary",
     },
     needs_info: {
@@ -50,12 +53,28 @@ const DIALOG: Record<Decision, { title: string; confirm: string; description: st
       variant: "primary",
     },
     rejected: {
-      title: "Reject business details",
-      confirm: "Reject details",
-      description: "Rejecting keeps live mode off. The merchant is told the review was not approved.",
+      title: "Reject business for abuse",
+      confirm: "Reject business",
+      description:
+        "Rejecting turns live mode off at once and keeps it off. Use it for abuse or fraud; to pause an account temporarily, suspend the merchant instead.",
       variant: "danger",
     },
   };
+
+/** What automatic screening decided (ADR-0024): derived from the system's decision on the case. */
+function screeningOf(k: { decided_by: string | null; decision_reason: string | null; status: string }): {
+  tone: "success" | "danger" | "neutral";
+  label: string;
+  detail: string;
+} {
+  if (k.decided_by !== "system")
+    return k.status === "pending" || k.status === "not_started"
+      ? { tone: "neutral", label: "Not screened yet", detail: "Screened automatically when the details are saved." }
+      : { tone: "neutral", label: "Decided by an operator", detail: k.decision_reason ?? "—" };
+  if (k.decision_reason?.includes("geo_blocked"))
+    return { tone: "danger", label: "Blocked by the geo policy", detail: k.decision_reason };
+  return { tone: "success", label: "Clear", detail: k.decision_reason ?? "Auto-approved" };
+}
 
 export function KybCase({ id }: { id: string }) {
   const app = useApp();
@@ -71,15 +90,15 @@ export function KybCase({ id }: { id: string }) {
 
   if (c.loading && !c.data)
     return (
-      <Shell section="kyb" crumbs={["Review"]}>
-        <DetailSkeleton label="business review" />
+      <Shell section="kyb" crumbs={["Business"]}>
+        <DetailSkeleton label="business" />
       </Shell>
     );
   if (c.error || !c.data)
     return (
-      <Shell section="kyb" crumbs={["Review"]}>
+      <Shell section="kyb" crumbs={["Business"]}>
         <Page>
-          <ErrorState error={c.error} onRetry={c.reload} title="This business review could not be loaded" />
+          <ErrorState error={c.error} onRetry={c.reload} title="This business could not be loaded" />
         </Page>
       </Shell>
     );
@@ -88,12 +107,14 @@ export function KybCase({ id }: { id: string }) {
   const p = k.profile;
   const blocked = app.blocked(decideOpsKybCase);
   const addr = p.business_address;
+  const screening = screeningOf(k);
+  const canActivate = k.status === "pending" || k.status === "rejected";
 
   return (
     <Shell section="kyb" crumbs={[kybRef(k.account_id)]}>
       <Page>
         <Header
-          title={`Business review ${kybRef(k.account_id)}`}
+          title={`Business ${kybRef(k.account_id)}`}
           subtitle={
             <>
               <Link to={`/merchants/${k.account_id}`}>{k.account_display_name}</Link>
@@ -117,7 +138,7 @@ export function KybCase({ id }: { id: string }) {
                 items={[
                   { label: "Legal name", value: p.legal_name ?? "—" },
                   { label: "Country of incorporation", value: p.country_of_incorporation ?? "—" },
-                  { label: "Registration number", value: p.registration_number ?? "—" },
+                  { label: "Registration number", value: p.registration_number ?? "Not provided" },
                   { label: "Business type", value: p.business_type ? businessTypeLabel(p.business_type) : "—" },
                   {
                     label: "Website",
@@ -160,10 +181,27 @@ export function KybCase({ id }: { id: string }) {
                 {k.requested_info}
               </Callout>
             ) : null}
+            <Section
+              title="Screening"
+              actions={<StatusBadge tone={screening.tone}>{screening.label}</StatusBadge>}
+              description="Automatic and instant: the geo policy checks the business country and address; payout addresses are sanctions-screened when added and re-screened daily."
+            >
+              <KeyValueList
+                items={[
+                  { label: "Business country and address", value: screening.detail },
+                  {
+                    label: "Payout addresses",
+                    value: (
+                      <Link to={`/merchants/${k.account_id}`}>Destinations and re-screening on the merchant page</Link>
+                    ),
+                  },
+                ]}
+              />
+            </Section>
             <Section title="History">
               {k.history.length ? (
                 <Timeline
-                  label="Review history"
+                  label="Business history"
                   items={[...k.history].reverse().map((h, i) => ({
                     id: `${h.at}-${i}`,
                     time: formatTimeSeconds(h.at),
@@ -182,38 +220,46 @@ export function KybCase({ id }: { id: string }) {
           <Card as="aside" aria-labelledby={`${gateId}-d`} className="c-side-card">
             <div className="np-stack">
               <CardTitle>
-                <span id={`${gateId}-d`}>Decision</span>
+                <span id={`${gateId}-d`}>Actions</span>
               </CardTitle>
               <p className="np-text-secondary">
-                Review the self-declared details against what you can check (public register, website). Your decision
-                and reason are audited.
+                No approval is needed: complete details go live automatically. Act only on abuse. Every action and
+                reason is audited.
               </p>
               <Button
+                variant="danger"
                 fullWidth
-                onClick={() => setDecision("approved")}
-                disabled={Boolean(blocked) || k.status !== "pending"}
+                onClick={() => setDecision("rejected")}
+                disabled={Boolean(blocked) || k.status === "rejected"}
                 aria-describedby={`${gateId}-n`}
               >
-                Approve details
+                Reject for abuse
               </Button>
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => {
-                  setRequested("");
-                  setDecision("needs_info");
-                }}
-                disabled={Boolean(blocked)}
-              >
-                Request more info
-              </Button>
-              <Button variant="secondary" fullWidth onClick={() => setDecision("rejected")} disabled={Boolean(blocked)}>
-                Reject
-              </Button>
-              <GateNote id={`${gateId}-n`}>
-                {blocked ??
-                  (k.status !== "pending" ? "Only pending reviews can be approved." : "Needs your security key.")}
-              </GateNote>
+              <Link to={`/merchants/${k.account_id}`}>Suspend or reinstate the merchant</Link>
+              {canActivate ? (
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setDecision("approved")}
+                  disabled={Boolean(blocked)}
+                >
+                  {k.status === "rejected" ? "Reverse rejection" : "Activate (manual review)"}
+                </Button>
+              ) : null}
+              {k.status === "pending" ? (
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => {
+                    setRequested("");
+                    setDecision("needs_info");
+                  }}
+                  disabled={Boolean(blocked)}
+                >
+                  Request more info
+                </Button>
+              ) : null}
+              <GateNote id={`${gateId}-n`}>{blocked ?? "Needs your security key."}</GateNote>
               {k.decided_at ? (
                 <KeyValueList
                   layout="stacked"
@@ -255,10 +301,10 @@ export function KybCase({ id }: { id: string }) {
                 tone: "success",
                 title:
                   decision === "approved"
-                    ? "Business details approved"
+                    ? "Business activated"
                     : decision === "needs_info"
                       ? "More information requested"
-                      : "Business details rejected",
+                      : "Business rejected",
               });
             }}
           >
