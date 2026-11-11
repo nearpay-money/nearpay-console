@@ -3,8 +3,8 @@
  * expiry and a small in-memory merchant-name cache. Nothing here touches web storage.
  */
 
-import type { AnyRoute, OpsRole } from "@nearpay/spec";
 import { getOpsMerchant, opsLogout } from "@nearpay-internal/spec";
+import type { AnyRoute, OpsRole } from "@nearpay-money/spec";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ApiClient } from "../lib/api";
 import { StepUpCanceled } from "../lib/errors";

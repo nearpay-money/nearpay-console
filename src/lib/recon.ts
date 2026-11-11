@@ -4,8 +4,8 @@
  * (INV-5): amounts of different assets are never added together.
  */
 
-import type { z } from "@nearpay/spec";
 import type { ReconciliationRun as RunSchema } from "@nearpay-internal/spec";
+import type { z } from "@nearpay-money/spec";
 import { assetDisplay, assetLabel, formatAssetAmount } from "./assets";
 import { formatDay, reconClassificationLabel, reconStatusLabel } from "./format";
 

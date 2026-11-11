@@ -44,7 +44,7 @@ nearpay-console/
 ## Develop
 
 ```sh
-pnpm install            # @nearpay/* and @nearpay-internal/* from the local registry (.npmrc)
+pnpm install            # @nearpay-money/* and @nearpay-internal/* from the local registry (.npmrc)
 pnpm dev                # Vite; /api is proxied to https://ops.nearpay.localhost (Compose stack)
 pnpm verify             # typecheck, Biome, unit + coverage, build, Playwright (system Chrome)
 NP_SHOTS_DIR=/tmp/shots pnpm e2e screens   # 1440/390 screenshots of every main screen

@@ -4,7 +4,6 @@
  * Resolving closes the run's question, not the books; the `reconciliation_diff` case is closed in Cases.
  */
 
-import type { z } from "@nearpay/spec";
 import {
   createOpsReconciliationRun,
   getOpsReconciliationRun,
@@ -24,6 +23,7 @@ import {
   Table,
   useToast,
 } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useId, useState } from "react";
 import { Link, useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

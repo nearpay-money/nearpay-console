@@ -5,9 +5,9 @@
  * fills up when manual review is turned on (`NP_KYB_MODE=manual`).
  */
 
-import type { z } from "@nearpay/spec";
 import { listOpsKybCases, type OpsKybCase } from "@nearpay-internal/spec";
 import { Pager, SegmentedControl, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useEffect, useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

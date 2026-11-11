@@ -3,7 +3,6 @@
  * `@nearpay-internal/spec` schema by the mock (responses are validated) and by test/unit/fixtures.test.ts.
  */
 
-import type { AuditEvent, Refund, z } from "@nearpay/spec";
 import type {
   BlocklistEntry,
   ComplianceCase,
@@ -16,6 +15,7 @@ import type {
   ProviderObservation,
   ReconciliationRun,
 } from "@nearpay-internal/spec";
+import type { AuditEvent, Refund, z } from "@nearpay-money/spec";
 
 const ALPHA = "0123456789abcdefghjkmnpqrstvwxyz";
 let seq = 0;

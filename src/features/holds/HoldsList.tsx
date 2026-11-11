@@ -3,7 +3,6 @@
  * default. `livemode` is required: the explorer never mixes modes (INV-8).
  */
 
-import type { z } from "@nearpay/spec";
 import { type Execution, listOpsExecutions } from "@nearpay-internal/spec";
 import {
   Field,
@@ -15,6 +14,7 @@ import {
   type TableColumn,
   type Tone,
 } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

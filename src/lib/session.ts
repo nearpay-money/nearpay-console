@@ -9,8 +9,8 @@
  * sign out cleanly at it; the server stays the authority (a `401` signs out at once).
  */
 
-import { OPS_SESSION_TTL_SECONDS, type z } from "@nearpay/spec";
 import { getOpsSession, type OpsSession as OpsSessionSchema } from "@nearpay-internal/spec";
+import { OPS_SESSION_TTL_SECONDS, type z } from "@nearpay-money/spec";
 import type { ApiClient } from "./api";
 import { ApiError } from "./errors";
 

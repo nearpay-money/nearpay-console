@@ -9,8 +9,8 @@
  * recorded for assertions.
  */
 import { randomBytes } from "node:crypto";
-import { type AnyRoute, type OpsRole, pathMatcher, safeParseTolerant } from "@nearpay/spec";
 import { OPS_ROUTES } from "@nearpay-internal/spec";
+import { type AnyRoute, type OpsRole, pathMatcher, safeParseTolerant } from "@nearpay-money/spec";
 import type { Page, Route } from "@playwright/test";
 import {
   auditEvent,

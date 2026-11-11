@@ -5,7 +5,6 @@
  * no "mark paid" override.
  */
 
-import type { z } from "@nearpay/spec";
 import {
   assignOpsCase,
   commentOpsCase,
@@ -29,6 +28,7 @@ import {
   Timeline,
   useToast,
 } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useEffect, useId, useState } from "react";
 import { Link, useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";
