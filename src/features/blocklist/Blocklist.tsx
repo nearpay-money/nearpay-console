@@ -4,7 +4,6 @@
  * provider `local`: OFAC digital-currency list + blocklist) and a re-screen of destinations.
  */
 
-import type { RouteResponse, z } from "@nearpay/spec";
 import {
   addOpsBlocklistEntry,
   type BlocklistEntry,
@@ -28,6 +27,7 @@ import {
   type TableColumn,
   useToast,
 } from "@nearpay-internal/ui";
+import type { RouteResponse, z } from "@nearpay-money/spec";
 import { useId, useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

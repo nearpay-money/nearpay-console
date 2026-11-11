@@ -1,4 +1,3 @@
-import { getAccount } from "@nearpay/spec";
 import {
   createOpsSuspensionRequest,
   getOpsMerchant,
@@ -8,6 +7,7 @@ import {
   opsPasskeyAuthenticationOptions,
   removeOpsBlocklistEntry,
 } from "@nearpay-internal/spec";
+import { getAccount } from "@nearpay-money/spec";
 import { describe, expect, it, vi } from "vitest";
 import { ApiClient, encodeQuery } from "../../src/lib/api";
 import { ApiError, friendlyError, isCode, StepUpCanceled } from "../../src/lib/errors";

@@ -4,9 +4,9 @@
  * (`ops_action.recorded`). Newest first.
  */
 
-import type { AuditEvent, z } from "@nearpay/spec";
 import { listOpsAuditEvents } from "@nearpay-internal/spec";
 import { Field, Input, Pager, Select, Table, type TableColumn } from "@nearpay-internal/ui";
+import type { AuditEvent, z } from "@nearpay-money/spec";
 import { useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

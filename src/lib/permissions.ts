@@ -3,7 +3,7 @@
  * `opsRoles` (`ops`, `ops_admin`). The UI only hides or disables what the role can never do; it never
  * decides a two-person rule itself — the server answers `403 approver_conflict` (lld §2).
  */
-import type { AnyRoute, OpsRole } from "@nearpay/spec";
+import type { AnyRoute, OpsRole } from "@nearpay-money/spec";
 
 export function opsAllows(route: Pick<AnyRoute, "auth" | "opsRoles">, role: OpsRole | undefined): boolean {
   if (route.auth.includes("anonymous")) return true;

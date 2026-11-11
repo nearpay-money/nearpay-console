@@ -3,8 +3,9 @@
  * `single_operator` to an `OpsApproval` (an extension, not yet in the spec) — when its requester may complete
  * it alone and the minimum reason length. Absent: a second, different operator must approve.
  */
-import type { z } from "@nearpay/spec";
+
 import type { OpsApproval as OpsApprovalSchema } from "@nearpay-internal/spec";
+import type { z } from "@nearpay-money/spec";
 
 type OpsApproval = z.output<typeof OpsApprovalSchema>;
 

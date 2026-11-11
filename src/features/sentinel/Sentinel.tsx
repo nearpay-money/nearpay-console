@@ -3,7 +3,6 @@
  * release needs a request and a second operator's approval) and audit findings (sentinel routes).
  */
 
-import type { z } from "@nearpay/spec";
 import {
   approveOpsKillSwitchRelease,
   engageOpsKillSwitch,
@@ -29,6 +28,7 @@ import {
   Tabs,
   useToast,
 } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useId, useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

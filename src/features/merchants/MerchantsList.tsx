@@ -1,8 +1,8 @@
 /** Merchants: search (`acct_` id, member email, name prefix) and filters (identity `listOpsMerchants`). */
 
-import type { z } from "@nearpay/spec";
 import { listOpsMerchants, type OpsMerchant } from "@nearpay-internal/spec";
 import { Field, Pager, SearchInput, Select, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useEffect, useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";

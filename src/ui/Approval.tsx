@@ -9,9 +9,9 @@
  * and asks for the reason. Without the extension nothing changes.
  */
 
-import type { z } from "@nearpay/spec";
 import type { OpsApproval as OpsApprovalSchema } from "@nearpay-internal/spec";
 import { Button, Card, CardTitle, KeyValueList, StatusBadge } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useId, useState } from "react";
 import { useApp } from "../app/context";
 import { approvalActionLabel, approvalStatusLabel, formatDateTime, formatUntil } from "../lib/format";

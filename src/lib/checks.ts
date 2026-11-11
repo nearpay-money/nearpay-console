@@ -5,8 +5,8 @@
  * "mark paid" override.
  */
 
-import type { z } from "@nearpay/spec";
 import type { Execution as ExecutionSchema } from "@nearpay-internal/spec";
+import type { z } from "@nearpay-money/spec";
 
 export type Execution = z.output<typeof ExecutionSchema>;
 

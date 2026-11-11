@@ -11,6 +11,7 @@
  *   open-enum values are kept; anything else is an `invalid_response` error, never rendered.
  */
 
+import { OPS_ROUTES } from "@nearpay-internal/spec";
 import {
   type AnyRoute,
   API_VERSION,
@@ -19,8 +20,7 @@ import {
   type RouteBody,
   type RouteResponse,
   safeParseTolerant,
-} from "@nearpay/spec";
-import { OPS_ROUTES } from "@nearpay-internal/spec";
+} from "@nearpay-money/spec";
 import { ApiError } from "./errors";
 
 export interface CallInput<R> {

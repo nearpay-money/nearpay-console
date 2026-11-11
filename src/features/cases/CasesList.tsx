@@ -1,8 +1,8 @@
 /** Compliance cases (compliance `listOpsCases`; default: not closed, highest severity first, then oldest). */
 
-import type { z } from "@nearpay/spec";
 import { type ComplianceCase, listOpsCases } from "@nearpay-internal/spec";
 import { Field, Pager, Select, StatusBadge, Table, type TableColumn } from "@nearpay-internal/ui";
+import type { z } from "@nearpay-money/spec";
 import { useState } from "react";
 import { useApp } from "../../app/context";
 import { Shell } from "../../app/Shell";
