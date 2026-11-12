@@ -6,6 +6,7 @@
  * exact base units with its id — never a guessed decimal point (INV-5).
  */
 import { formatMoney } from "@nearpay-internal/ui";
+import { assetIdBlockchain } from "@nearpay-money/spec";
 
 export interface AssetDisplay {
   readonly symbol: string;
@@ -41,12 +42,43 @@ export function assetDisplay(assetId: string): AssetDisplay | undefined {
   return KNOWN[assetId];
 }
 
-/** Short asset label: "USDC · Base", or the asset id's last segment for unknown assets. */
+/** Display names of 1Click `blockchain` codes (others show the code itself). */
+const NETWORKS: Readonly<Record<string, string>> = {
+  near: "NEAR",
+  eth: "Ethereum",
+  base: "Base",
+  arb: "Arbitrum",
+  op: "OP Mainnet",
+  pol: "Polygon",
+  bsc: "BNB Smart Chain",
+  avax: "Avalanche",
+  gnosis: "Gnosis",
+  sol: "Solana",
+  btc: "Bitcoin",
+  ltc: "Litecoin",
+  doge: "Dogecoin",
+};
+
+/**
+ * The network an asset id names (spec `parseAssetId`, 0.5.2: omft and omdep bridge ids with prefix aliases such as
+ * `bnb` → BNB Smart Chain, `1cs_v1:` ids, NEAR NEP-141), or null when the id does not say (never guessed).
+ */
+export function assetNetwork(assetId: string): string | null {
+  const code = assetIdBlockchain(assetId);
+  return code === null ? null : (NETWORKS[code] ?? code);
+}
+
+/**
+ * Short asset label: "USDC · Base"; for unknown assets the asset id's last segment, followed by the network when the
+ * id names one other than NEAR ("bnb-0x55d398…omdep.near · BNB Smart Chain").
+ */
 export function assetLabel(assetId: string): string {
   const a = KNOWN[assetId];
   if (a) return `${a.symbol} · ${a.network}`;
   const tail = assetId.replace(/^nep(141|245):/, "");
-  return tail.length > 28 ? `${tail.slice(0, 12)}…${tail.slice(-10)}` : tail;
+  const short = tail.length > 28 ? `${tail.slice(0, 12)}…${tail.slice(-10)}` : tail;
+  const network = assetNetwork(assetId);
+  return network && network !== "NEAR" ? `${short} · ${network}` : short;
 }
 
 /**
