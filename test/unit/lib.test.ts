@@ -5,7 +5,7 @@ import {
   removeOpsBlocklistEntry,
 } from "@nearpay-internal/spec";
 import { describe, expect, it, vi } from "vitest";
-import { assetDisplay, assetLabel, formatAssetAmount } from "../../src/lib/assets";
+import { assetDisplay, assetLabel, assetNetwork, formatAssetAmount } from "../../src/lib/assets";
 import { canReverify, finalityRecheckOf, reviewChecks } from "../../src/lib/checks";
 import { ApiError } from "../../src/lib/errors";
 import * as fmt from "../../src/lib/format";
@@ -149,6 +149,18 @@ describe("assets", () => {
     expect(assetLabel("nep141:short.near")).toBe("short.near");
     expect(assetLabel(`nep141:${"a".repeat(40)}.near`)).toMatch(/…/);
     expect(assetDisplay(USDC_BASE)?.decimals).toBe(6);
+  });
+
+  it("names the network of unknown bridge ids (omdep, bnb alias, 1cs_v1) and never guesses one", () => {
+    expect(assetLabel("nep141:bnb-0x55d398326f99059ff775485246999027b3197955.omdep.near")).toBe(
+      "bnb-0x55d398…omdep.near · BNB Smart Chain",
+    );
+    expect(assetNetwork("nep141:sol-0xaad74c68eecfc9f8c5bdcea614f6167048c795ef.omdep.near")).toBe("Solana");
+    expect(assetNetwork("1cs_v1:btc:native:coin")).toBe("Bitcoin");
+    expect(assetNetwork("nep141:abs.omdep.near")).toBe("abs");
+    expect(assetNetwork("nep141:usdt.tether-token.near")).toBe("NEAR");
+    expect(assetNetwork("nep141:eth.bridge.near")).toBeNull();
+    expect(assetLabel("nep141:eth.bridge.near")).toBe("eth.bridge.near");
   });
 });
 
